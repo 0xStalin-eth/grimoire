@@ -29,6 +29,10 @@ was edited.
 - **One file per issue in the mirror root.** Preserved copies live in subfolders so that
   `<mirror>/issue<N>-*.md` always matches exactly one file (other skills rely on that).
 - **Show before writing.** Run `status` first and confirm with the user what will be pulled or updated.
+- **Only the mirror is touched.** The script reads and writes inside the mirror folder alone (its top
+  level, `CLOSED/`, `originals/`, `history/`). The project's own findings (drafts, submissions, comments,
+  rewrites) and tomes are never read or written: only the user or the skill that owns them changes them.
+  The script refuses a `--mirror` that looks like the project's own findings folder.
 
 ## Mirror layout
 

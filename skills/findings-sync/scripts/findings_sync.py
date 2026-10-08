@@ -210,6 +210,11 @@ def main():
     u.add_argument("numbers", nargs="*", type=int)
     u.add_argument("--all", action="store_true")
     args = ap.parse_args()
+    # Only the mirror is ever written. Refuse a mirror that holds the user's own findings work.
+    own = [d for d in ("Submitted", "comments", "drafts") if os.path.isdir(os.path.join(args.mirror, d))]
+    if own or os.path.basename(os.path.normpath(args.mirror)) == "findings":
+        ap.error(f"--mirror {args.mirror} looks like the project's own findings folder ({', '.join(own) or 'findings/'}); "
+                 "point it at the dedicated mirror folder, e.g. grimoire/findings/original-repo-findings")
     if args.cmd == "pull" and not (args.numbers or args.new):
         ap.error("pull needs issue numbers or --new")
     if args.cmd == "update" and not (args.numbers or args.all):
