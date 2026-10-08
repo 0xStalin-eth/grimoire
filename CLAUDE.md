@@ -37,6 +37,7 @@ forge-poc-templates/          # Git submodule: Immunefi's Solidity PoC library
 | Skill | Purpose |
 |-------|---------|
 | `write-poc` | Write proof-of-concept exploits (6-phase workflow, 10 reference docs covering 20+ vuln classes) |
+| `mitigation-review` | Review client fixes per finding: report/issue/fix-commit mapping, pre/post-fix PoCs, verdict, report write-up |
 | `summon` | Initialize a grimoire workspace on a new codebase (creates GRIMOIRE.md, maps architecture) |
 | `cartography` | Map and document code flows with indexed YAML-frontmatter cartography files |
 | `review-cartography` | Verify and refine existing cartography flows |
@@ -56,6 +57,14 @@ Use `/gap-analysis` to get a current prioritized view of what's spec'd vs built.
 - Supporting material goes in `references/` and `examples/` subdirectories
 - All skills produce concrete artifacts (GRIMOIRE.md, cartography files, PoC scripts)
 - Skills auto-load via `"skills": "auto"` in plugin.json — no manifest changes needed
+- **Skills and agents must be protocol-agnostic.** They have to work for any research engagement. Never
+  include anything specific to a client or protocol: no names, contract/function identifiers, addresses,
+  commit hashes, repo URLs, report excerpts, or figures from a real engagement. This applies to SKILL.md,
+  `references/`, `examples/`, script comments and agent specs. When a skill is distilled from a real
+  engagement, generalize its examples into placeholders (`<ID>`, `Router::_withdraw`, `AdapterA`) or
+  templates, and don't copy that engagement's files in. This repo is public, so engagement content in it
+  would also leak confidential audit material. Before finishing a skill, grep it for the source
+  engagement's identifiers.
 
 ## Key Principles
 

@@ -104,6 +104,7 @@ Then work naturally — Grimoire's skills trigger from context:
 "Document this as a finding"               → finding-draft
 "Review my findings before submission"     → finding-review
 "Check for duplicates"                     → finding-dedup
+"Review the mitigation for L-5"            → mitigation-review
 ```
 
 Learn more about grimoire by reading [docs](grimoire/concepts/what%20is%20grimoire.md)
