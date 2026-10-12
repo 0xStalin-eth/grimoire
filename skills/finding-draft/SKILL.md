@@ -91,7 +91,17 @@ Present severity, type, and context to the user for confirmation.
 ### 4. Draft Sections
 
 Write each section following the format from the finding skill and the detailed guidelines
-in `skills/finding/references/finding-best-practices.md`:
+in `skills/finding/references/finding-best-practices.md`. Read that file before drafting. These style
+rules are mandatory in every section; re-check the draft against them before presenting it:
+
+- **Topic sentences:** each explanatory paragraph opens with a declarative sentence stating its main
+  point. No run-in bold headings ("**How X works.** ...") and no question-then-answer framing.
+- **Function references:** `Contract::functionName` in prose, never `contract.function()` or a bare
+  `function()`.
+- **Code snippets:** headed by `// ContractName`, wrapped in the enclosing function signature, with `...`
+  around the referenced lines and the closing brace. Functions of the same contract share one heading;
+  another contract gets its own.
+- **Other findings:** linked as `[issue-N](<url of that issue>)`, never a bare `#N`.
 
 **## Description** (mandatory) — 2-4 self-contained paragraphs covering component, flaw,
 preconditions, and impact. If the familiar produced a feasibility predicate or

@@ -76,6 +76,18 @@ needed to exploit, and name the minimum attacker class (any user, privileged rol
 governance majority, etc.)? Missing or vague preconditions are a review failure — they
 are what the reader uses to decide whether the finding applies to their deployment.
 
+**Style rules** — flag every violation of these mandatory rules (details in
+`finding-best-practices.md`), quoting the offending text and giving the corrected version:
+
+- **Topic sentences:** each explanatory paragraph opens with a declarative sentence stating its main
+  point. No run-in bold headings ("**How X works.** ...") and no question-then-answer framing.
+- **Function references:** `Contract::functionName` in prose, never `contract.function()` or a bare
+  `function()`.
+- **Code snippets:** headed by `// ContractName`, wrapped in the enclosing function signature, with `...`
+  around the referenced lines and the closing brace. Functions of the same contract share one heading;
+  another contract gets its own.
+- **Other findings:** linked as `[issue-N](<url of that issue>)`, never a bare `#N`.
+
 **PoC reference** — does the `@`-referenced file exist? Is it correctly formatted?
 
 **References** — are all cited references real and relevant? Are claims fact-checked?
