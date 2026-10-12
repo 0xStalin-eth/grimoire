@@ -51,8 +51,23 @@ has never opened this repo understand the vulnerability from this section alone?
 
 ### Tips
 
-- Include code snippets when they clarify the mechanism. Keep them short — just the
-  relevant lines.
+- Include code snippets when they clarify the mechanism. Keep them short, but always show where the
+  lines live: the enclosing function's signature, `...` for omitted code, the referenced lines together
+  with the `if`/`for` blocks they sit in, and the closing brace. Mitigation diffs follow the same shape.
+
+  ```solidity
+  function withdraw(uint256 assets, address receiver) external {
+      ...
+      if (assets > available) {
+          uint256 shortfall = assets - available;   // <- the line being discussed
+          ...
+      }
+  }
+  ```
+- Refer to functions in prose as `Contract::functionName`: the contract's name, no parentheses or
+  arguments (`Router::withdraw`, not `router.withdraw()` or a bare `withdraw()`). When the code calls
+  through an instance variable, name its contract type. If the arguments matter, say them in words.
+  Statements (`require(a == b)`) stay as written, and code blocks keep real call syntax.
 - State severity cues explicitly: "Any unauthenticated user can...", "An attacker with
   admin access could...", "Under specific timing conditions..."
 - Do not reference other findings. Each finding stands alone.
@@ -151,5 +166,7 @@ Use this during review to catch frequent issues:
 - [ ] PoC reference points to nonexistent file
 - [ ] References cite fabricated sources
 - [ ] Code snippets included without file/line attribution
+- [ ] Code snippet shows bare lines without the enclosing function signature and `...`
+- [ ] Functions referenced as `contract.function()` or bare `function()` instead of `Contract::functionName`
 - [ ] Preconditions not stated (assumes the reader knows requirements)
 - [ ] Uses project-specific jargon without explanation
