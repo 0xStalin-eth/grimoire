@@ -93,7 +93,10 @@ has never opened this repo understand the vulnerability from this section alone?
   Statements (`require(a == b)`) stay as written, and code blocks keep real call syntax.
 - State severity cues explicitly: "Any unauthenticated user can...", "An attacker with
   admin access could...", "Under specific timing conditions..."
-- Do not reference other findings. Each finding stands alone.
+- Each finding stands alone: never rely on another finding to explain this one. When a cross-reference
+  is still useful (a related root cause, a shared fix, the same symptom through a different trigger),
+  link it as `[issue-N](<url of that issue in the findings repo>)`, e.g.
+  `[issue-72](https://github.com/<org>/<findings-repo>/issues/72)`, never a bare `#72`.
 - Keep it concise. If you need more than 4 paragraphs, move technical detail to the
   Details section.
 
@@ -192,5 +195,6 @@ Use this during review to catch frequent issues:
 - [ ] Code snippet shows bare lines without the `// ContractName` heading, the enclosing function signature and `...`
 - [ ] Functions referenced as `contract.function()` or bare `function()` instead of `Contract::functionName`
 - [ ] Paragraph opens with a run-in bold heading or a question instead of a declarative topic sentence
+- [ ] Another finding referenced as a bare `#N` instead of `[issue-N](link)`
 - [ ] Preconditions not stated (assumes the reader knows requirements)
 - [ ] Uses project-specific jargon without explanation
