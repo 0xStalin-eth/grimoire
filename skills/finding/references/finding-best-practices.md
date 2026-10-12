@@ -76,6 +76,17 @@ has never opened this repo understand the vulnerability from this section alone?
       ...
   }
   ```
+- Write explanatory paragraphs as plain prose that opens with a declarative topic sentence: what
+  happens, what the component does, or what the reader needs to know. The following sentences explain
+  the mechanism, conditions and details. Do not use run-in headings (a bold label such as
+  "**How withdrawals are processed.**" followed by the explanation), and do not frame a paragraph as a
+  question followed by its answer.
+
+  Avoid: "**How a withdrawal is settled.** When a user withdraws, `Router::withdraw` pulls the assets
+  from `Vault::pull` and burns the shares."
+
+  Prefer: "Withdrawals are settled in two steps. When a user withdraws, `Router::withdraw` pulls the
+  assets from `Vault::pull` and burns the shares."
 - Refer to functions in prose as `Contract::functionName`: the contract's name, no parentheses or
   arguments (`Router::withdraw`, not `router.withdraw()` or a bare `withdraw()`). When the code calls
   through an instance variable, name its contract type. If the arguments matter, say them in words.
@@ -180,5 +191,6 @@ Use this during review to catch frequent issues:
 - [ ] Code snippets included without file/line attribution
 - [ ] Code snippet shows bare lines without the `// ContractName` heading, the enclosing function signature and `...`
 - [ ] Functions referenced as `contract.function()` or bare `function()` instead of `Contract::functionName`
+- [ ] Paragraph opens with a run-in bold heading or a question instead of a declarative topic sentence
 - [ ] Preconditions not stated (assumes the reader knows requirements)
 - [ ] Uses project-specific jargon without explanation

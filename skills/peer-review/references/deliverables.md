@@ -6,7 +6,8 @@ or findings folder) and show the text in the reply as well.
 ## Introductory paragraph
 
 For readers new to the bug. Markdown, ready to paste above the finding's Description.
-- Open with a bold sentence naming the mechanism ("**How X works, and why Y slips through**").
+- Open with a declarative topic sentence that states the main point; no run-in bold headings (see
+  `skills/finding/references/finding-best-practices.md`).
 - Explain the normal behaviour first, then the case that breaks it.
 - Use one small table or worked example with numbers from the PoC.
 - End with the consequence in one sentence.
@@ -22,7 +23,8 @@ user may close the report with it, phrase the recovery as a runbook step.
 
 Follow the format of the finding the user names (or the project's submitted findings):
 - front matter (`title`, `severity`, `type`, `context` with `file:line` ranges) if the project uses it;
-- Description that explains the mechanism before the bug, with bold-lead paragraphs;
+- Description that explains the mechanism before the bug, in paragraphs that each open with a
+  declarative topic sentence (no run-in bold headings);
 - Preconditions and attacker class, Impact bullets, a Severity paragraph;
 - a worked example with a table;
 - an embedded or `@`-referenced PoC that is standalone and passes, with the run command;
