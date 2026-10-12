@@ -83,6 +83,27 @@ Set these in your Claude Code settings (`~/.claude/settings.json`):
 
 Both are optional — the librarian will fall back to web search if they are not set. You can also export them as regular shell environment variables (e.g. in `~/.zshrc`) instead of using `settings.json`.
 
+#### Installing as a plugin (desktop app)
+
+`--plugin-dir` only applies to the session it is passed to, so the Claude desktop app (and `/desktop` handoffs) won't load Grimoire that way. Install it from a local marketplace instead. In the directory that contains your `grimoire/` clone, create `.claude-plugin/marketplace.json`:
+
+```json
+{
+  "name": "grimoire-local",
+  "owner": { "name": "you" },
+  "plugins": [{ "name": "grimoire", "source": "./grimoire" }]
+}
+```
+
+Then register it and install:
+
+```bash
+claude plugin marketplace add /path/to/parent-of-grimoire
+claude plugin install grimoire@grimoire-local
+```
+
+A plugin installed from a local folder is read straight from that folder, not copied, so edits to Grimoire's source take effect at the next session start (or run `/reload-plugins` in an open session). Whatever branch the clone has checked out is what loads. Don't also pass `--plugin-dir` once it's installed, or the plugin loads twice.
+
 ### Summon
 
 Start any engagement with `summon`:
