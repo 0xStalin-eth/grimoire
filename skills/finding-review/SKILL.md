@@ -87,6 +87,8 @@ are what the reader uses to decide whether the finding applies to their deployme
   around the referenced lines and the closing brace. Functions of the same contract share one heading;
   another contract gets its own.
 - **Other findings:** linked as `[issue-N](<url of that issue>)`, never a bare `#N`.
+- **PoC references:** a figure or result cited from a PoC names the test it comes from ("In
+  `test_PoC_<Name>`, ..."), never a bare "the PoC"; give the PoC file path at least once.
 
 **PoC reference** — does the `@`-referenced file exist? Is it correctly formatted?
 

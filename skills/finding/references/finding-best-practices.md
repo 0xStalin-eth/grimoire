@@ -97,6 +97,9 @@ has never opened this repo understand the vulnerability from this section alone?
   is still useful (a related root cause, a shared fix, the same symptom through a different trigger),
   link it as `[issue-N](<url of that issue in the findings repo>)`, e.g.
   `[issue-72](https://github.com/<org>/<findings-repo>/issues/72)`, never a bare `#72`.
+- When prose cites a PoC result ("in the PoC, ..."), name the test it comes from, e.g. "In
+  `test_PoC_<Name>`, ...", and give the PoC file path at least once. A bare "the PoC"
+  leaves the reader guessing which test produced the figure when the file has several.
 - Keep it concise. If you need more than 4 paragraphs, move technical detail to the
   Details section.
 
@@ -196,5 +199,6 @@ Use this during review to catch frequent issues:
 - [ ] Functions referenced as `contract.function()` or bare `function()` instead of `Contract::functionName`
 - [ ] Paragraph opens with a run-in bold heading or a question instead of a declarative topic sentence
 - [ ] Another finding referenced as a bare `#N` instead of `[issue-N](link)`
+- [ ] A PoC result cited as "the PoC" without naming the test function it comes from
 - [ ] Preconditions not stated (assumes the reader knows requirements)
 - [ ] Uses project-specific jargon without explanation

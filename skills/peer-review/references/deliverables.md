@@ -5,6 +5,8 @@ or findings folder) and show the text in the reply as well.
 
 In every deliverable meant for the tracker or the report, reference other findings as
 `[issue-N](<url of that issue>)`, never a bare `#N` (see `finding-best-practices.md`).
+When citing a PoC result, name the test function it comes from ("In `test_PoC_<Name>`, ..."),
+not just "the PoC".
 
 ## Introductory paragraph
 

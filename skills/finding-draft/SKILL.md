@@ -102,6 +102,8 @@ rules are mandatory in every section; re-check the draft against them before pre
   around the referenced lines and the closing brace. Functions of the same contract share one heading;
   another contract gets its own.
 - **Other findings:** linked as `[issue-N](<url of that issue>)`, never a bare `#N`.
+- **PoC references:** a figure or result cited from a PoC names the test it comes from ("In
+  `test_PoC_<Name>`, ..."), never a bare "the PoC"; give the PoC file path at least once.
 
 **## Description** (mandatory) — 2-4 self-contained paragraphs covering component, flaw,
 preconditions, and impact. If the familiar produced a feasibility predicate or
