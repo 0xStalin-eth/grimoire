@@ -46,5 +46,8 @@ Run: `forge test --match-path test/mitigation/<ID>MitigationReview.t.sol -vv`
 
 ## Cyfrin write-up
 
-> **Cyfrin:**
-> Verified. <…>
+**<Client>:**
+Fixed at commitHash [<short>](https://github.com/<org>/<repo>/commit/<full>) && [<short>](...).
+
+**Cyfrin:**
+Verified. <single unwrapped line, no blockquote>

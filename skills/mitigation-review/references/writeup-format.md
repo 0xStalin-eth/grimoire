@@ -5,6 +5,21 @@ review file holds the detail; the write-up only states what changed and why it c
 
 ## Rules
 
+- **Client line first (mandatory):** above the Cyfrin block, add the client's response naming the commit(s) where
+  the fix landed, then a blank line:
+
+      **<Client>:**
+      Fixed at commitHash [abc1234](https://github.com/<org>/<repo>/commit/<full-sha>) && [def5678](...).
+
+  Use the PR merge commits in the client's repo, 7-character short hash as link text and the full hash in the URL,
+  joined with ` && `. **Never link a PR**: when the fix was read from a PR, link that PR's merge commit. Generate the
+  links with `scripts/commit-links.sh <client-remote> <sha | #PR | PR-URL>...`, which resolves PRs to their merge
+  commit and fails on an unmerged PR. For docs-only or
+  acknowledged items, use the same line shape with the matching verb (e.g. `Acknowledged; documented at commitHash …`).
+- **Layout (mandatory):** `**Cyfrin:**` alone on the first line; the verdict text on the next line as **one single
+  unwrapped line**. No blockquote (`>`), no hard wrapping inside the paragraph. An optional second paragraph (notes
+  or recommendation) is its own single unwrapped line, separated by a blank line. Present it to the user and save it
+  in the review file in exactly this form.
 - Open with the verdict word: `Verified.`, `Partially fixed.`, `Acknowledged.`, `Not fixed.`
 - Paragraph 1 (1–3 sentences): what the code does now, naming the function, and the effect on the
   finding's scenario. Use `Contract::function` and backticks for identifiers.
@@ -18,35 +33,37 @@ review file holds the detail; the write-up only states what changed and why it c
 
 ## Shapes
 
+Every shape below is preceded by the client line, e.g.:
+
+**Client:**
+Fixed at commitHash [abc1234](https://github.com/org/repo/commit/abc1234...) && [def5678](https://github.com/org/repo/commit/def5678...).
+
 **Fixed:**
-> **Cyfrin:**
-> Verified. `Router::_findAndWithdraw` now skips priority entries that are not tracked in
-> `_positionIndex`, mirroring the guard in `SiblingRouter`. A donated, untracked position can no longer
-> be selected, so withdrawals fall through to tracked positions.
+
+**Cyfrin:**
+Verified. `Router::_findAndWithdraw` now skips priority entries that are not tracked in `_positionIndex`, mirroring the guard in `SiblingRouter`. A donated, untracked position can no longer be selected, so withdrawals fall through to tracked positions.
 
 **Fixed for part of the scope:**
-> **Cyfrin:**
-> Verified for `AdapterA`: `allocate` now only accepts a vault allocator. `AdapterB::allocate` still
-> accepts the owner. This is documented and has no impact, since the vault only lets allocators call
-> `allocate`.
 
-**Partially fixed:**
-> **Cyfrin:**
-> Partially fixed. `setRewardInterval` now reverts below 1 day, so the drip can no longer be
-> configured off. The interval still defaults to 0 at deployment, so a reward recorded before it is set
-> is released in one block. Consider reverting in `recordReward` when the interval is 0, or setting it
-> in the constructor.
+**Cyfrin:**
+Verified for `AdapterA`: `allocate` now only accepts a vault allocator. `AdapterB::allocate` still accepts the owner. This is documented and has no impact, since the vault only lets allocators call `allocate`.
+
+**Partially fixed (with a recommendation paragraph):**
+
+**Cyfrin:**
+Partially fixed. `setRewardInterval` now reverts below 1 day, so the drip can no longer be configured off. The interval still defaults to 0 at deployment, so a reward recorded before it is set is released in one block.
+
+Consider reverting in `recordReward` when the interval is 0, or setting it in the constructor.
 
 **Acknowledged:**
-> **Cyfrin:**
-> Acknowledged. `totalAssets` intentionally remains fail-closed; `IAdapter` now documents that an
-> underlying vault whose valuation reverts halts the parent vault until it recovers or the adapter is
-> removed.
+
+**Cyfrin:**
+Acknowledged. `totalAssets` intentionally remains fail-closed; `IAdapter` now documents that an underlying vault whose valuation reverts halts the parent vault until it recovers or the adapter is removed.
 
 **Rename / trivial:**
-> **Cyfrin:**
-> Verified. The helpers were renamed to `_requireAllocatorOrOwner` / `_isAllocatorOrOwner`, matching
-> the roles they actually admit.
+
+**Cyfrin:**
+Verified. The helpers were renamed to `_requireAllocatorOrOwner` / `_isAllocatorOrOwner`, matching the roles they actually admit.
 
 ## Follow-up asks that recur
 

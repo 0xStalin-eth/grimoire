@@ -37,6 +37,7 @@ for the report's `**Cyfrin:**` field.
 | Baseline (audited) commit | `37f06bb` | GRIMOIRE.md header |
 | Mitigation commit | `be70792` | GRIMOIRE.md header |
 | In-scope paths | `src/vault-v2 src/risk-engines` | GRIMOIRE.md Scope |
+| Client name + git remote of the client repo | `Acme`, remote `client` | GRIMOIRE.md header |
 
 If GRIMOIRE.md doesn't exist, run `/summon` first. If any input is missing from GRIMOIRE.md, ask
 once, then record it there.
@@ -160,9 +161,16 @@ Reply in this order, briefly:
 2. **What changed** — 2–4 bullets with `file:line`.
 3. **PoCs** — the table (test → result) and the pass count, or why there are none.
 4. **Notes** — numbered residuals with their rating, if any.
-5. The write-up, quoted, following `references/writeup-format.md`:
-   > **Cyfrin:**
-   > Verified. …
+5. The write-up, following `references/writeup-format.md`: first the client line with the fix commit links
+   (`$S/commit-links.sh <client-remote> <sha | #PR | PR-URL>...`; PRs resolve to their merge commit, never link a PR), then `**Cyfrin:**` on its own line and the text as
+   **one single unwrapped line**, no blockquote:
+
+   **<Client>:**
+   Fixed at commitHash [abc1234](…/commit/<full>) && [def5678](…/commit/<full>).
+
+   **Cyfrin:**
+   Verified. …
+
 6. One line: where the review was saved and which finding is next by the index (pending, report
    order).
 
