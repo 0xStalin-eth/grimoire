@@ -3,6 +3,8 @@
 Produce these only when asked. Save files where the project keeps them (look for an existing comments
 or findings folder) and show the text in the reply as well.
 
+The Recommended Mitigation section always goes last, after the Proof of Concept; only the project/auditor response stubs (and a References list, if any) may follow it.
+
 In every deliverable meant for the tracker or the report, reference other findings as
 `[issue-N](<url of that issue>)`, never a bare `#N` (see `finding-best-practices.md`).
 When citing a PoC result, name the test function it comes from ("In `test_PoC_<Name>`, ..."),

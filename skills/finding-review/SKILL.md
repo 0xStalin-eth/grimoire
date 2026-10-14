@@ -65,7 +65,7 @@ understand the vulnerability from this section alone? Is impact clearly stated?
 **Details** — if present, does it add value beyond the description? If absent, should it
 be added?
 
-**Recommendation** — is it objective? Does it avoid non-trivial code suggestions? Is it
+**Recommendation** — is it the last section, after the PoC? Is it objective? Does it avoid non-trivial code suggestions? Is it
 actionable by a project maintainer? If it shows a code diff, is the guidance disclosure
 ("The next code snippet shall be taken as a general guidance ...") directly above it?
 

@@ -130,6 +130,7 @@ has never opened this repo understand the vulnerability from this section alone?
 
 ### Principles
 
+- **Always last.** The Recommended Mitigation section always goes last, after the Proof of Concept; only the project/auditor response stubs (and a References list, if any) may follow it. This holds for full findings, rewrites and comments that add impact.
 - **Objective voice.** State what needs to change, not how you would rewrite the code.
 - **One-sentence fixes preferred.** If you can express the fix in one sentence, do so.
 - **Never suggest non-trivial code changes.** Security researchers are external, unbiased
@@ -200,6 +201,7 @@ Use this during review to catch frequent issues:
 - [ ] Title missing location (where)
 - [ ] Description not self-contained — references external context
 - [ ] Recommendation suggests non-trivial code changes
+- [ ] Recommended Mitigation placed before the Proof of Concept instead of at the end
 - [ ] A recommendation diff without the guidance disclosure line directly above it
 - [ ] Severity estimate does not match described impact
 - [ ] PoC reference points to nonexistent file
