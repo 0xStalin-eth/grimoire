@@ -15,8 +15,9 @@ Probe tests (written to answer a question or to check a fix's side effects) stay
 write-up and its PoC. Move a probe test in only when the user asks to add a claim that probe
 validated; rename it `test_PoC_<Name>` and cite it. The same applies to tests written to explore an
 idea or a possible new impact: nothing enters the write-up until it is validated and requested.
-Do not leave stale probes: once an idea is ruled out, or the user leaves it out of the final
-write-up, delete its tests.
+Probe files may stay on disk, but a write-up must not keep stale references: once an idea is
+ruled out or left out of the final write-up, remove every mention, citation and snippet of its
+tests from the deliverables. Do not delete probe files unless the user asks.
 
 ## Introductory paragraph
 

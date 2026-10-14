@@ -213,7 +213,8 @@ Only on request. Formats are in `references/deliverables.md`:
   Prefer one full-stack PoC per finding, and delete superseded scratch PoCs once the user agrees.
   Probe tests (exploring an idea, a new impact or a fix's side effects) live in their own
   `*Probe.t.sol` files and never enter a write-up's PoC unless the user asks to add a claim the
-  probe validated. Delete probes for ideas that were ruled out or left out of the final write-up.
+  probe validated. Probe files may stay, but no write-up may reference or embed tests for ideas that
+  were ruled out or left out; do not delete probe files unless asked.
   Ask before creating a new folder; a mistyped path usually means the existing one.
 - **Plain language in write-ups:** spell out what symbols mean (`exchangeRate`, not `r`), give
   numbers from the PoC, prefer a small table to a paragraph of figures, and avoid jargon the user
