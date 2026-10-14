@@ -11,6 +11,9 @@ When citing a PoC result, name the test function it comes from ("In `test_PoC_<N
 not just "the PoC". Every test a deliverable cites must be embedded, with its output, in that
 same deliverable file. Do not split a comment and its supporting PoC into separate files, and do
 not cite tests that exist only in the repo's PoC file or in another deliverable.
+Probe tests (written to answer a question or to check a fix's side effects) stay out of the
+write-up and its PoC. Move a probe test in only when the user asks to add a claim that probe
+validated; rename it `test_PoC_<Name>` and cite it. Keep probes on disk until then.
 
 ## Introductory paragraph
 
