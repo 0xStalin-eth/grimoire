@@ -6,7 +6,9 @@ or findings folder) and show the text in the reply as well.
 In every deliverable meant for the tracker or the report, reference other findings as
 `[issue-N](<url of that issue>)`, never a bare `#N` (see `finding-best-practices.md`).
 When citing a PoC result, name the test function it comes from ("In `test_PoC_<Name>`, ..."),
-not just "the PoC".
+not just "the PoC". Every test a deliverable cites must be embedded, with its output, in that
+same deliverable file. Do not split a comment and its supporting PoC into separate files, and do
+not cite tests that exist only in the repo's PoC file or in another deliverable.
 
 ## Introductory paragraph
 

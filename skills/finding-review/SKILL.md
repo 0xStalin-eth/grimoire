@@ -88,7 +88,9 @@ are what the reader uses to decide whether the finding applies to their deployme
   another contract gets its own.
 - **Other findings:** linked as `[issue-N](<url of that issue>)`, never a bare `#N`.
 - **PoC references:** a figure or result cited from a PoC names the test it comes from ("In
-  `test_PoC_<Name>`, ..."), never a bare "the PoC"; give the PoC file path at least once.
+  `test_PoC_<Name>`, ..."), never a bare "the PoC"; give the PoC file path at least once. Every
+  test cited must be embedded, with its output, in the same write-up file: no figure may point to
+  a test that lives only in another file or another comment.
 
 **PoC reference** — does the `@`-referenced file exist? Is it correctly formatted?
 

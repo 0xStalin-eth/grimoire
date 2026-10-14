@@ -100,6 +100,9 @@ has never opened this repo understand the vulnerability from this section alone?
 - When prose cites a PoC result ("in the PoC, ..."), name the test it comes from, e.g. "In
   `test_PoC_<Name>`, ...", and give the PoC file path at least once. A bare "the PoC"
   leaves the reader guessing which test produced the figure when the file has several.
+- Every test the write-up cites must be in the write-up itself, embedded with its output. Do
+  not cite a test that only exists in the repo, in another draft or in a separate comment: the
+  reader of this write-up must be able to run every figure it quotes from what it contains.
 - Keep it concise. If you need more than 4 paragraphs, move technical detail to the
   Details section.
 
@@ -200,5 +203,6 @@ Use this during review to catch frequent issues:
 - [ ] Paragraph opens with a run-in bold heading or a question instead of a declarative topic sentence
 - [ ] Another finding referenced as a bare `#N` instead of `[issue-N](link)`
 - [ ] A PoC result cited as "the PoC" without naming the test function it comes from
+- [ ] A cited test that is not embedded (with its output) in the write-up itself
 - [ ] Preconditions not stated (assumes the reader knows requirements)
 - [ ] Uses project-specific jargon without explanation
