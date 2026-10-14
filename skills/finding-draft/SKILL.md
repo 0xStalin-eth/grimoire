@@ -118,6 +118,8 @@ should be stated here verbatim.
 **## Proof of Concept** — `@path/to/poc-file` if one exists, placeholder otherwise.
 
 **## Recommendation** (mandatory) — objective fix direction. Never non-trivial code changes.
+When it includes a code diff, put this disclosure line directly above the diff block:
+"The next code snippet shall be taken as a general guidance to visualize the changes the mitigation may require. This is not to be used as the exact changes that are implemented."
 
 **## References** (optional) — numbered citations. Use the librarian agent to discover
 relevant references — prior audit findings, specification clauses, and vulnerability

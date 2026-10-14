@@ -66,7 +66,8 @@ understand the vulnerability from this section alone? Is impact clearly stated?
 be added?
 
 **Recommendation** — is it objective? Does it avoid non-trivial code suggestions? Is it
-actionable by a project maintainer?
+actionable by a project maintainer? If it shows a code diff, is the guidance disclosure
+("The next code snippet shall be taken as a general guidance ...") directly above it?
 
 **Severity** — is the estimate reasonable given the described impact, exploitability,
 and preconditions?

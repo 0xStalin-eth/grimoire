@@ -62,6 +62,8 @@ from most to least promising. New leads go at the top when the user says they'll
 
 ## Mitigation diff
 
-Show the verified diff with clean paths. Say what was verified (PoC results, regression comparison),
+Show the verified diff with clean paths. Directly above the diff block, add the disclosure line:
+"The next code snippet shall be taken as a general guidance to visualize the changes the mitigation may require. This is not to be used as the exact changes that are implemented."
+Say what was verified (PoC results, regression comparison),
 what the other variants need, and any invariant or caveat. If the user asks for a design without
 implementation, label it a sketch and compare it with the tested option.

@@ -151,6 +151,12 @@ This is honest and appropriate. Not every finding has a one-line fix.
 - Reference established patterns when applicable (e.g., "checks-effects-interactions",
   "principle of least privilege")
 - If suggesting a function change, name the function but do not write the implementation
+- When a recommendation does include a code diff (a verified mitigation diff, for example),
+  put this disclosure line directly above the diff block, on its own:
+
+  The next code snippet shall be taken as a general guidance to visualize the changes the mitigation may require. This is not to be used as the exact changes that are implemented.
+
+  The diff illustrates the change; it is not the patch the project must apply.
 
 ## Severity Estimation
 
@@ -194,6 +200,7 @@ Use this during review to catch frequent issues:
 - [ ] Title missing location (where)
 - [ ] Description not self-contained — references external context
 - [ ] Recommendation suggests non-trivial code changes
+- [ ] A recommendation diff without the guidance disclosure line directly above it
 - [ ] Severity estimate does not match described impact
 - [ ] PoC reference points to nonexistent file
 - [ ] References cite fabricated sources
