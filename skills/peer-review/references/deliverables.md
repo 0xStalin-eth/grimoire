@@ -13,7 +13,10 @@ same deliverable file. Do not split a comment and its supporting PoC into separa
 not cite tests that exist only in the repo's PoC file or in another deliverable.
 Probe tests (written to answer a question or to check a fix's side effects) stay out of the
 write-up and its PoC. Move a probe test in only when the user asks to add a claim that probe
-validated; rename it `test_PoC_<Name>` and cite it. Keep probes on disk until then.
+validated; rename it `test_PoC_<Name>` and cite it. The same applies to tests written to explore an
+idea or a possible new impact: nothing enters the write-up until it is validated and requested.
+Do not leave stale probes: once an idea is ruled out, or the user leaves it out of the final
+write-up, delete its tests.
 
 ## Introductory paragraph
 
