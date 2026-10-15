@@ -163,7 +163,10 @@ Follow `references/duplicate-analysis.md`. Two findings are duplicates when they
 **and** one fix closes both. A shared code site, symptom, or theme is not enough. For every candidate:
 - state each root in one line;
 - check whether each fix closes the other finding (test it if cheap);
-- say whether the finding under review is a **symptom** of a broader root already filed.
+- say whether the finding under review is a **symptom** of a broader root already filed;
+- check whether another finding's fix (preferably the client's actual commit) **resolves** the one
+  under review even without a shared root; if its PoC stops reproducing and the precondition cannot
+  recur, suggest closing it as resolved by that fix (see "Resolved by another finding's fix").
 
 When several findings share a root, list them as a cluster with one row per symptom, and point to the
 single fix that closes the cluster.

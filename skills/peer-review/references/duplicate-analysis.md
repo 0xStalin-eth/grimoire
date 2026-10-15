@@ -38,6 +38,31 @@ when nothing backs it) closes all four. Present those as a cluster:
 
 Then name the single fix and say which local fixes become defence in depth.
 
+## Resolved by another finding's fix
+
+Always consider this verdict, even when no candidate passes the duplicate test. A finding can be
+closed as **resolved by another finding's fix** when that fix removes its precondition or impact, even
+if the roots differ and the fixes close in one direction only. Example pattern: finding B says "path X
+ignores the reservation that path Y applies", and finding A's fix makes that reservation always zero.
+B's own fix would not close A, but after A's fix B has nothing left to bypass.
+
+1. For each related finding, find its fix. Prefer the client's actual commit (linked in the issue's
+   comments, or the "Client: Proposed Fix" label) over the finding's suggested diff.
+2. Apply it to the audited code in an isolated copy inside the workspace, always
+   (`scripts/verify-fix.sh`, or `scripts/isolated-workspace.sh` for manual runs; see
+   `parallel-sessions.md`). When hunks don't apply because the trees diverged, adapt them and say which.
+3. Run the reviewed finding's PoC and the regression suite before and after. Note which assertion
+   now fails; it shows *where* the scenario breaks.
+4. Check in code that the precondition cannot come back (every path that creates it is now covered),
+   not only that this PoC stops.
+5. If both hold, recommend closing as resolved by that fix. Say why the precondition is gone, what is
+   left of the scenario and where it is tracked (another finding, a documented runbook), and which
+   neighbours stay open.
+
+It is a judgement call, not a rule: report the strict duplicate result separately, and present the
+closure as a suggestion with the evidence. If the other fix is only proposed, not merged, say the
+closure depends on it landing as tested.
+
 ## The user's own findings
 
 Always check whether the finding under review duplicates something the user filed, drafted, or is

@@ -23,6 +23,7 @@ code assumes, what actually happens, and the consequence.>
 - <What to ask the project, if the rating hinges on an unverifiable fact.>
 
 **Duplicates:** <none | duplicate of #X (same root, same fix) | related: #Y (<one-line difference>)>.
+<If another finding's fix resolves this one: "Resolved by #Z's fix (<commit or diff>): <PoC result with it applied>; <why the precondition cannot recur>. Suggest closing.">.
 <Cluster table if this is one symptom of a broader root.>
 
 **Mitigation.** <Is the recommendation right? What is missing?> <Verified diff, or "not verified".>
