@@ -14,6 +14,12 @@ set -euo pipefail
 
 finding="${1:?usage: extract-poc.sh <finding.md> <dest.t.sol> [--src-dir <dir>] [--block <n>]}"
 dest="${2:?usage: extract-poc.sh <finding.md> <dest.t.sol> [--src-dir <dir>] [--block <n>]}"
+# Writes only inside the git workspace this runs from: refuse a destination above its root.
+inside_workspace() {
+  python3 -I -c 'import os, sys; r = os.path.realpath(sys.argv[1]); p = os.path.realpath(sys.argv[2]); sys.exit(0 if p == r or p.startswith(r + os.sep) else 1)' \
+    "$(git rev-parse --show-toplevel)" "$1"
+}
+inside_workspace "$dest" || { echo "refusing to write outside the workspace: $dest" >&2; exit 2; }
 shift 2
 src_dir=""
 block=1

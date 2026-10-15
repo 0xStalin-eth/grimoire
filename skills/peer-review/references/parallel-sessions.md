@@ -11,60 +11,71 @@ patch, not the original code, and a restore can wipe out their patch or put back
 
 ## Rules
 
+0. **Stay inside the workspace.** Every file a review writes, and every command it runs, stays inside
+   the git workspace the session runs in. That covers copies, patched files, builds and scratch output.
+   Nothing goes in a parent folder, the system temp folder, or a `git worktree` (which registers itself
+   in the git directory, often above the workspace). The scripts enforce this: they put everything
+   under `<workspace>/.isolated/` and refuse destinations outside the workspace root. Patched files you
+   pass to them are only read.
 1. **The shared checkout is read-mostly.** Write only new, untracked files there: your PoCs, probes,
-   write-ups. Never swap or edit tracked source files in it, not even briefly and not even when you think you are alone.
-2. **Patch and verify in your own worktree.** `verify-fix.sh` does this by default. For manual patch
-   probes, create one with `scripts/isolated-worktree.sh create <scratch>/<id>/wt`, work there, and
-   remove it when done. It is HEAD plus the untracked files, so your PoCs are present.
-   - **Prove the worktree is identical before using it.** `create` and `sync` compare the isolated and
-     shared trees byte for byte: every tracked and untracked, non-ignored file, plus the dependency
-     symlinks. Any difference stops the run. `create` then removes the worktree and lists the cause, and
-     `verify-fix.sh` runs the same comparison again at the end to show whether the shared checkout changed
-     mid-run. Run `isolated-worktree.sh verify <dir>` yourself before quoting any figure from a manual
-     probe. A baseline that differs from the shared code is not a baseline.
+   write-ups. Never swap or edit tracked source files in it, not even briefly and not even when you think
+   you are alone.
+2. **Patch and verify in an isolated copy.** `verify-fix.sh` always does this. For manual patch probes,
+   create one with `scripts/isolated-workspace.sh create i<N>`, work in `.isolated/i<N>/`, and remove it
+   when done. It holds every tracked and untracked file of the workspace, so your PoCs are present.
+   - **Prove the copy is identical before using it.** `create` and `sync` compare the copy and the
+     workspace byte for byte: every tracked and untracked, non-ignored file, plus the dependency
+     symlinks. Any difference stops the run. `create` then removes the copy and lists the cause, and
+     `verify-fix.sh` runs the same comparison again at the end to show whether the workspace changed
+     mid-run. Run `isolated-workspace.sh verify i<N>` yourself before quoting any figure from a manual
+     probe. A baseline that differs from the workspace's code is not a baseline.
 3. **Take write-up output from a clean run.** PoC output embedded in a write-up must come from a
-   run on unmodified code: the isolated worktree, or the shared checkout after confirming that
-   `git status` shows no tracked changes under the source folders and no other `forge` process is running.
-4. **Check before you trust a shared-checkout run.** Before and after it, run `git status --short` on the
-   source folders and `pgrep -fl 'forge (test|build)'`. If tracked files changed during the run, or
-   another forge process overlapped it, run it again in your own worktree.
-5. **Never revert what isn't yours.** If you find tracked source files modified in the shared checkout and
-   you didn't change them, leave them. Say so to the user, and report your results from your own
-   worktree. Restoring them can destroy another session's work in progress.
+   run on unmodified code: the isolated copy, or the workspace after confirming that `git status`
+   shows no tracked changes under the source folders and no other `forge` process is running.
+4. **Check before you trust a run in the workspace itself.** Before and after it, run
+   `git status --short` on the source folders and `pgrep -fl 'forge (test|build)'`. If tracked files
+   changed during the run, or another forge process overlapped it, run it again in your isolated copy.
+5. **Never revert what isn't yours.** If you find tracked source files modified in the workspace and
+   you didn't change them, leave them. Say so to the user, and report your results from your isolated
+   copy. Restoring them can destroy another session's work in progress.
 6. **Tell the other session when you touched a shared file.** If you swapped a shared file, even briefly,
    message the sessions that may have run tests in that window (`ListAgents`, then `SendMessage`).
    Say which files changed and for how long, and that the files are back at HEAD. When you receive such a
    message, check its claims (`git status`, compare with HEAD), re-run anything that overlapped, and reply
    saying what you re-ran and whether results changed.
-7. **One scratch folder per finding.** Use `<scratch>/i<N>/`:
+7. **One work folder per finding, inside the workspace.** Use `.isolated/work/i<N>/`:
    - `a/` for the originals and `b/` for the patched copies;
    - the diff;
-   - a backup of any PoC you rewrite;
-   - the worktree, if you keep one.
+   - a backup of any PoC you rewrite.
 
-   Probes that compile only against a patch go in the scratch folder, not the PoC folder. In the shared
+   Probes that compile only against a patch go in that work folder, not the PoC folder. In the shared
    PoC folder they break every other session's build.
-8. **Never use `git stash` in a shared repo.** The stash stack is shared across worktrees. To set work
-   aside, use a temporary commit in your own worktree.
+8. **Never use `git stash` in a shared repo.** The stash stack is shared across checkouts. To set work
+   aside, copy the files into your work folder.
 
-## Worktree setup notes
+## Isolated copy notes
 
-- Create it with `git worktree add --detach <dir> HEAD`. A detached HEAD keeps it from touching any branch.
-- **Dependencies:** symlink `lib/` and `node_modules/` from the shared checkout. Submodules are not checked
-  out in a new worktree, and copying them is slow.
-- **Untracked files:** copy all untracked, non-ignored files, not only the PoC files. PoCs import helpers
-  (`utils/`, mocks) that are also untracked, and a missing helper fails the whole build.
-- **Uncommitted edits to tracked files** in the shared checkout make the trees differ, and `create` stops.
-  Find out whose they are. If they are code you mean to test against (your own intended edits), re-run
-  with `--with-modified`, which copies them and then proves the trees identical. If they are another
-  session's temporary patch, wait until the shared checkout is back at HEAD. Never guess.
-- **Refresh, don't recreate.** After editing a PoC in the shared checkout, `sync` the worktree, which
-  mirrors the shared checkout again and re-verifies. It discards edits made inside the worktree. Recreating
-  the worktree costs a full rebuild.
-- **What the comparison skips:** ignored files (build output, caches) and anything under the symlinked
-  dependency folders, which are the shared folders themselves. It reports any submodule outside them as
-  not compared.
-- **Clean up:** `git worktree remove --force <dir>`, then `git worktree prune`.
+- **Location:** `<workspace>/.isolated/<name>/`. The script writes `.isolated/.gitignore` with `*`, so the
+  folder never shows in `git status`, is never copied into another session's copy, and is outside the
+  folders forge and Hardhat compile from the workspace root. `work` is a reserved name for the work
+  folders.
+- **Dependencies:** `lib/` and `node_modules/` are symlinks to the workspace's own folders. Copying them
+  is slow, and they are compared by checking where the links point. `remove` deletes the links, never
+  what they point to.
+- **Untracked files:** all untracked, non-ignored files are copied, not only the PoC files. PoCs import
+  helpers (`utils/`, mocks) that are also untracked, and a missing helper fails the whole build.
+- **Uncommitted edits to tracked files** in the workspace stop `create` and `sync`. Find out whose they
+  are. If they are code you mean to test against (your own intended edits), re-run with
+  `--with-modified`, which copies them as they are and proves the copy identical. If they are another
+  session's temporary patch, wait until the workspace is back at HEAD. Never guess.
+- **Refresh, don't recreate.** After editing a PoC in the workspace, run `sync`. It mirrors the
+  workspace again (deleting extra files and discarding edits made in the copy) and re-verifies.
+  Recreating the copy costs a full rebuild.
+- **Other commits** (mitigation reviews): `create <name> --ref <commit>` extracts that commit's files with
+  `git archive` into the copy, then adds the untracked files. The comparison is skipped and says so.
+- **What the comparison skips:** files the workspace ignores (build output, caches) and anything under the
+  symlinked dependency folders. It reports any submodule outside them as not compared.
+- **Clean up:** `isolated-workspace.sh remove <name>`.
 
 ## Comparing results
 
@@ -75,5 +86,5 @@ patch, not the original code, and a restore can wipe out their patch or put back
 - **Separate infrastructure failures from results.** Fork suites can fail on one run and pass on the
   next ("block not found", RPC timeouts). Re-run them, or exclude fork suites, before calling a change a
   regression.
-- **Spot-check one run in the shared checkout.** Run the PoC once there on clean code and compare figures
+- **Spot-check one run in the workspace itself.** Run the PoC once there on clean code and compare figures
   and gas with the isolated run. If they are identical, the two environments agree.

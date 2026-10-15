@@ -2,17 +2,18 @@
 
 ## The loop
 
-1. **Copy** the files you'll change into the scratchpad: `<scratch>/<id>/a/` (original) and
-   `<scratch>/<id>/b/` (patched). Check the repo copy equals `a/` before you start.
+1. **Copy** the files you'll change into the work folder inside the workspace: `.isolated/work/<id>/a/`
+   (original) and `.isolated/work/<id>/b/` (patched). Check the repo copy equals `a/` before you start.
 2. **Patch** `b/` with exact string replacements (assert each pattern matches exactly once).
-3. **Run** `scripts/verify-fix.sh` with the PoC and the regression suites. It always runs in a private
-   worktree, so the shared checkout and other sessions' runs are never affected:
+3. **Run** `scripts/verify-fix.sh` with the PoC and the regression suites. It always runs in an
+   isolated copy inside the workspace, so the workspace's own files and other sessions' runs are never
+   affected:
    - the PoC's **bug assertions should now fail** (that is the bug being gone);
    - the PoC's control tests should still pass;
    - every other test should keep its result.
 4. **Read** the changed-results list. Explain every unexpected change before claiming the fix works.
-5. **Restore** (the script removes the worktree) and confirm the shared checkout's touched paths still
-   match HEAD. If they don't, another session changed them: leave them and say so.
+5. **Restore** (the script removes the copy) and confirm the workspace's touched paths still match
+   HEAD. If they don't, another session changed them: leave them and say so.
 6. **Show** the diff (from `a/` to `b/`) with clean `a/` and `b/` path prefixes.
 
 When a PoC asserts the buggy state *before* measuring the outcome, a fixed run fails early and hides
@@ -28,7 +29,7 @@ the end result. Re-run a copy with that one assertion removed (back up and resto
 | A suite fails only through a mock setter or a path the real code can't reach | Not a regression, but the fix relies on an invariant; document it |
 | Fork suites fail before and after | Missing RPC env vars; exclude them from the comparison |
 | Fork suites fail in only one run ("block not found", timeouts) | RPC flakiness, not the fix; re-run them |
-| Many unrelated changes at once | Another session's patch leaked into one run; re-run in a private worktree |
+| Many unrelated changes at once | Another session's patch leaked into one run; re-run in an isolated copy |
 
 ## Recurring fix patterns
 

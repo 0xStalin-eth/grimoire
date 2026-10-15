@@ -1,54 +1,62 @@
 #!/usr/bin/env bash
-# verify-fix.sh — test a candidate fix without touching the shared checkout.
+# verify-fix.sh — test a candidate fix without touching the workspace's own files.
 #
-# The comparison always runs in a private git worktree (scripts/isolated-worktree.sh), so the shared checkout is
-# never touched. Before the baseline run the worktree is proven byte-for-byte identical to the shared checkout; if it
-# is not (uncommitted edits to tracked files there), the script stops and lists them. The suites run on the original
-# code, the patched files are copied in, the suites run again, and every test whose result changed is printed, keyed
-# by suite. At the end the comparison runs again, to show whether the shared checkout changed during the run.
+# Everything runs INSIDE the git workspace this is started from: the comparison uses a private copy in
+# <workspace>/.isolated/<name>/ (scripts/isolated-workspace.sh) and keeps its scratch files in
+# <workspace>/.isolated/.verify-<name>/. Nothing is written above the workspace root. The patched files are only read.
+#
+# Before the baseline run the copy is proven byte-for-byte identical to the workspace; if it is not (uncommitted edits
+# to tracked files), the script stops and lists them. The suites run on the original code, the patched files are
+# copied in, the suites run again, and every test whose result changed is printed, keyed by suite. At the end the
+# comparison runs again, to show whether the workspace changed during the run.
 #
 # Usage: verify-fix.sh --patch <repo/File.sol>=<patched/File.sol> [--patch ...] --suite '<glob>' [--suite ...]
-#                      [--worktree <dir>] [--keep] [--with-modified]
+#                      [--name <name>] [--keep] [--with-modified]
 #   --patch     a repo file and the patched copy to swap in for the "after" run (repeatable)
 #   --suite     a forge --match-path glob (repeatable), e.g. 'test/pocs/Issue12*.t.sol' 'test/unit/**'
-#   --worktree  where to create the private worktree (default: a temp dir); reuse saves a rebuild
-#   --keep      keep the worktree for reuse (remove it later with isolated-worktree.sh remove)
-#   --with-modified  include the shared checkout's uncommitted edits to tracked files in the baseline (only after
+#   --name      name of the isolated copy (default: verify-<pid>); reuse a kept one to save a rebuild
+#   --keep      keep the copy for reuse (remove it later with isolated-workspace.sh remove <name>)
+#   --with-modified  include the workspace's uncommitted edits to tracked files in the baseline (only after
 #               confirming they are code you want to test against, not another session's temporary patch)
 # Env: FORGE_ARGS  extra arguments for forge test (e.g. "--no-match-path 'test/fork/**'")
-# Run from the repository root.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-patches=(); suites=(); wt=""; keep=0; create_args=()
+iso_sh="$here/isolated-workspace.sh"
+patches=(); suites=(); name="verify-$$"; keep=0; create_args=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --patch) patches+=("$2"); shift 2 ;;
     --suite) suites+=("$2"); shift 2 ;;
-    --worktree) wt="$2"; shift 2 ;;
+    --name) name="$2"; shift 2 ;;
     --keep) keep=1; shift ;;
     --with-modified) create_args+=(--with-modified); shift ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 [[ ${#patches[@]} -gt 0 && ${#suites[@]} -gt 0 ]] || { echo "need at least one --patch and one --suite" >&2; exit 2; }
+case "$name" in ""|.*|*/*) echo "invalid --name: $name" >&2; exit 2 ;; esac
 
 root="$(git rev-parse --show-toplevel)"
-work="$(mktemp -d)"
+cd "$root"
+work="$root/.isolated/.verify-$name"
+rm -rf "$work"; mkdir -p "$work"
+
 for p in "${patches[@]}"; do
   target="${p%%=*}"; patched="${p#*=}"
+  case "$target" in /*|*..*) echo "--patch target must be a relative path inside the workspace: $target" >&2; exit 2 ;; esac
   [[ -f "$root/$target" && -f "$patched" ]] || { echo "missing file in --patch $p" >&2; exit 2; }
   patched_abs="$(cd "$(dirname "$patched")" && pwd)/$(basename "$patched")"
   echo "$target=$patched_abs" >> "$work/patches"
 done
 
-run_dir="${wt:-$work/wt}"
-echo ">>> preparing the isolated worktree and proving it matches the shared checkout"
-if [[ -d "$run_dir" ]]; then
-  bash "$here/isolated-worktree.sh" sync "$run_dir"
+echo ">>> preparing the isolated copy and proving it matches the workspace"
+if [[ -e "$root/.isolated/$name" ]]; then
+  bash "$iso_sh" sync "$name"
 else
-  bash "$here/isolated-worktree.sh" create "$run_dir" ${create_args[@]+"${create_args[@]}"}
+  bash "$iso_sh" create "$name" ${create_args[@]+"${create_args[@]}"}
 fi
+run_dir="$(bash "$iso_sh" path "$name")"
 
 mkdir -p "$work/orig"
 while IFS='=' read -r target _; do
@@ -63,9 +71,8 @@ restore() {
 }
 cleanup() {
   restore
-  if [[ $keep -eq 0 ]]; then
-    bash "$here/isolated-worktree.sh" remove "$run_dir" >/dev/null 2>&1 || true
-  fi
+  [[ $keep -eq 1 ]] || bash "$iso_sh" remove "$name" >/dev/null 2>&1 || true
+  rm -rf "$work"
 }
 trap cleanup EXIT INT TERM
 
@@ -106,10 +113,10 @@ grep -h 'COMPILE-OR-RUN-ERROR' "$work/before" "$work/after" && echo "(a suite pr
 
 restore
 echo
-echo "=== end-of-run check: isolated worktree (patch removed) vs shared checkout"
-if bash "$here/isolated-worktree.sh" verify "$run_dir"; then
-  echo "the shared checkout did not change during the run"
+echo "=== end-of-run check: isolated copy (patch removed) vs workspace"
+if bash "$iso_sh" verify "$name"; then
+  echo "the workspace did not change during the run"
 else
-  echo "WARNING: the shared checkout changed during the run (it matched at the start). The results above are"
+  echo "WARNING: the workspace changed during the run (it matched at the start). The results above are"
   echo "for the code as it was at the start; re-run if the change is meant to be part of the baseline."
 fi

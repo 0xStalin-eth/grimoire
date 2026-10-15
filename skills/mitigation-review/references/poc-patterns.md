@@ -36,9 +36,11 @@ Pick the cheapest that works:
    ```
    Immutables are rebuilt from the constructor args; storage stays. Only valid if the storage layout
    and constructor didn't change in the fix — check the snapshot's diff.
-3. **Layout/ABI changes** (storage re-pack, type widening): can't swap. Reproduce on a
-   `git worktree add ../prefix <fix-commit>^` and run the test there, or rely on the client's
-   pre-fix PoC from the original report. Don't `git checkout` in the review worktree.
+3. **Layout/ABI changes** (storage re-pack, type widening): can't swap. Reproduce in an isolated copy
+   of the pre-fix code inside the workspace, and run the test there:
+   `bash skills/peer-review/scripts/isolated-workspace.sh create prefix-<ID> --ref <fix-commit>^`.
+   Or rely on the client's pre-fix PoC from the original report. Never `git checkout` in the review
+   workspace, and never create anything above its root.
 
 ## Gotchas
 

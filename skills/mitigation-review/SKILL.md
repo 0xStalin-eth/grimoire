@@ -127,18 +127,18 @@ Follow `references/poc-patterns.md`. The minimum is:
 
 1. **Pre-fix reproduces.** Config fixes: the report's inputs now revert. Logic fixes:
    `$S/prefix-snapshot.sh <src-file> <fix-commit> test/mitigation`, then `deployCodeTo` it. Layout
-   changes: use a separate `git worktree` at `<fix-commit>^`.
+   changes: use an isolated copy at `<fix-commit>^` (below).
 2. **Post-fix passes** with the report's own figures.
 3. **Residual / bypass probes** for every concern raised in B2.
 4. **The client's regression test** for the fix (from the fix commits) also passes.
 
 Always, even when you are the only session, keep the shared checkout free of other commits and
-swapped source files. Do any step that needs them in a private worktree:
-`bash skills/peer-review/scripts/isolated-worktree.sh create <scratch>/<ID>/wt --ref <commit>`. At the
-shared HEAD the worktree is proven byte-for-byte identical before use. With `--ref` the code differs
-on purpose, and the script says the comparison was skipped. The new
-test files stay untracked in the shared checkout and are copied into the worktree, so only the source
-under test changes.
+swapped source files. Do any step that needs them in an isolated copy inside the workspace:
+`bash skills/peer-review/scripts/isolated-workspace.sh create <ID> --ref <commit>`. It is created at
+`.isolated/<ID>/`, and nothing goes above the workspace root. A copy at the workspace's HEAD is proven
+byte-for-byte identical before use; with `--ref` the code differs on purpose, and the script says the
+comparison was skipped. The new test files stay untracked in the workspace and are copied into the
+isolated copy, so only the source under test changes.
 
 Put the tests in `test/mitigation/<ID>MitigationReview.t.sol` (template:
 `examples/MitigationReview.t.sol.template`), scoped with `--match-path`. If a fork test needs an RPC
@@ -211,7 +211,7 @@ on a new version.
 - **Isolation, always:** apply these rules on every review, even in a single session, because another
   session can start in the same checkout at any time. Follow
   `skills/peer-review/references/parallel-sessions.md`:
-  - patch and probe only in a private worktree;
+  - patch and probe only in an isolated copy inside the workspace;
   - take PoC output for write-ups from a clean run;
   - check `git status` and running `forge` processes before trusting a shared-checkout run;
   - never revert changes you didn't make;

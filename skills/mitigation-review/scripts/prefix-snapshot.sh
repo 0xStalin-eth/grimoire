@@ -17,6 +17,13 @@ src="${1:?usage: prefix-snapshot.sh <src-file> <fix-commit> <out-dir>}"
 commit="${2:?}"
 out="${3:?}"
 
+# Writes only inside the git workspace this runs from: refuse a destination above its root.
+inside_workspace() {
+  python3 -I -c 'import os, sys; r = os.path.realpath(sys.argv[1]); p = os.path.realpath(sys.argv[2]); sys.exit(0 if p == r or p.startswith(r + os.sep) else 1)' \
+    "$(git rev-parse --show-toplevel)" "$1"
+}
+inside_workspace "$out" || { echo "refusing to write outside the workspace: $out" >&2; exit 2; }
+
 name="$(basename "$src" .sol)"
 dest="$out/${name}PreFix.sol"
 mkdir -p "$out"

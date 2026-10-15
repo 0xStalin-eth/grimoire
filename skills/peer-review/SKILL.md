@@ -35,9 +35,10 @@ and give a verdict the user can act on.
   watching the PoC's bug assertions flip, and diffing the whole test suite before and after.
 - **Never leave the codebase changed.** Every patch is temporary. Restore it and prove it (`git status`
   on the touched paths) before reporting.
-- **Patch only in your own worktree, always.** Even when you are the only session, patch, probe and
-  verify fixes in a private worktree. Never swap source files in the checkout, and never revert changes
-  you didn't make (`references/parallel-sessions.md`).
+- **Patch only in an isolated copy, always, and stay inside the workspace.** Even when you are the only
+  session, patch, probe and verify fixes in an isolated copy under `<workspace>/.isolated/`. Never swap
+  source files in the workspace itself, never write or run anything above its root, and never revert
+  changes you didn't make (`references/parallel-sessions.md`).
 - **Correct yourself in the open.** When a later check contradicts an earlier statement (a wrong
   variant, a mis-scoped claim, a flawed fix), say so plainly and update the verdict.
 
@@ -51,7 +52,7 @@ and give a verdict the user can act on.
 | Baseline and audited commits | GRIMOIRE.md Scope ("delta" range), used to decide pre-existing vs new code |
 | In-scope paths, trust assumptions | GRIMOIRE.md Scope / Trust assumptions |
 | PoC directory | The project's existing PoC folder (e.g. `test/PoC/<Org>/`); never create a new one silently |
-| Scratchpad | Session scratchpad for patched copies and backups |
+| Work folder | `<workspace>/.isolated/work/i<N>/` for patched copies and backups (never outside the workspace) |
 
 If GRIMOIRE.md doesn't exist, run `/summon` first. If an input is missing, ask once and record it in
 GRIMOIRE.md. Scripts live in this skill's `scripts/` directory; run them from the target repo root.
@@ -174,18 +175,19 @@ concrete fix is needed, **ask before writing it**, and verify it:
 
 ```bash
 bash <skill>/scripts/verify-fix.sh \
-  --patch <repo/path/File.sol>=<scratch/patched/File.sol> \
+  --patch <repo/path/File.sol>=.isolated/work/i<N>/b/File.sol \
   --suite '<poc-dir>/Issue<N>*.t.sol' --suite '<regression glob>'
 ```
 
-The script works in a private git worktree (HEAD plus the repo's untracked files), so the shared
-checkout is never touched. Before the baseline run it proves the worktree byte-for-byte identical to the
-shared checkout and stops if it isn't (`--with-modified` includes your own uncommitted edits once you
-have confirmed they are yours). At the end it compares again to show whether the shared checkout changed
-mid-run. It runs the suites on the original code, applies the patches, runs them again, prints every test whose result
-changed (keyed by suite and test), and removes the worktree. Pass `--worktree <scratch>/<id>/wt --keep`
-to reuse one across several runs. There is no in-place mode. Take PoC output for the write-up from a
-clean run (`references/parallel-sessions.md`, rule 3). Expected
+The script works in an isolated copy at `<workspace>/.isolated/<name>/` (every tracked and untracked
+file of the workspace), so the workspace's own files are never touched and nothing is written above its
+root. Before the baseline run it proves the copy byte-for-byte identical to the workspace and stops if it
+isn't (`--with-modified` includes your own uncommitted edits once you have confirmed they are yours). At
+the end it compares again to show whether the workspace changed mid-run. It runs the suites on the
+original code, applies the patches, runs them again, prints every test whose result changed (keyed by
+suite and test), and removes the copy. Pass `--name i<N> --keep` to reuse one across several runs. There
+is no in-place mode. Take PoC output for the write-up from a clean run (`references/parallel-sessions.md`,
+rule 3). Expected
 outcome: the PoC's **bug assertions** fail (the bug is gone), and nothing else changes. Investigate every
 other change. A failing test that only fails through a mock path the real code can't reach is not a
 regression, but it shows an **invariant** the fix relies on, and the write-up must state it.
@@ -228,14 +230,15 @@ Only on request. Formats are in `references/deliverables.md`:
 - **Plain language in write-ups:** spell out what symbols mean (`exchangeRate`, not `r`), give
   numbers from the PoC, prefer a small table to a paragraph of figures, and avoid jargon the user
   hasn't used.
-- **Patched copies** live in the scratchpad (`<scratch>/<id>/a` original, `.../b` patched). Source files
-  are only patched inside a private worktree (`verify-fix.sh`, or `scripts/isolated-worktree.sh` for
-  manual probes), never in the shared checkout. Probes that compile only against a patch stay in the
-  scratchpad, because in the PoC folder they break every other session's build.
+- **Patched copies** live in the work folder inside the workspace (`.isolated/work/i<N>/a` original,
+  `.../b` patched). Source files are only patched inside an isolated copy (`verify-fix.sh`, or
+  `scripts/isolated-workspace.sh` for manual probes), never in the workspace itself. Probes that compile
+  only against a patch stay in the work folder, because in the PoC folder they break every other
+  session's build. `extract-poc.sh` and `prefix-snapshot.sh` refuse destinations outside the workspace.
 - **Isolation, always:** follow `references/parallel-sessions.md` on every review, including a
   single-issue session. Another session can start at any time. Before trusting a run in the shared
   checkout, check `git status` on the source folders and `pgrep -fl 'forge (test|build)'`. If another
-  session changed files, leave them, tell the user, and run in your own worktree.
+  session changed files, leave them, tell the user, and run in your isolated copy.
 - **Track the queue** in a pending-reviews tome (`examples/pending-tome-template.md`) so parked
   findings and open leads survive across sessions.
 - **Grimoire hand-offs:** `/write-poc` for complex exploit PoCs, `/finding-review` for polishing the
