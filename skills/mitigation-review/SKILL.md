@@ -56,6 +56,12 @@ Scripts live in this skill's `scripts/` directory; run them from the repo root (
 
 ### A1. Confirm inputs
 
+Run the review from the checkout that has the fix commits (often a separate checkout used only for
+fixes). The scripts are confined to the workspace they start in: its HEAD, its files, and its
+`.isolated/` copies. Every other checkout of the repo, including the one used for the audit itself, is
+off limits. So the report, GRIMOIRE.md and any findings mirror must be in this checkout too. Copy them
+in, or run `/summon` here.
+
 Check `git log -1 <mitigation-commit>` and `git log -1 <baseline>` resolve, `gh auth status` works,
 and the report file exists. Note fork-test env vars the repo uses (`grep -r "vm.envString\|rpc_endpoints" test foundry.toml`).
 
