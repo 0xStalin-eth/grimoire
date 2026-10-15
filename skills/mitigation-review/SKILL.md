@@ -134,7 +134,9 @@ Follow `references/poc-patterns.md`. The minimum is:
 
 Always, even when you are the only session, keep the shared checkout free of other commits and
 swapped source files. Do any step that needs them in a private worktree:
-`bash skills/peer-review/scripts/isolated-worktree.sh create <scratch>/<ID>/wt --ref <commit>`. The new
+`bash skills/peer-review/scripts/isolated-worktree.sh create <scratch>/<ID>/wt --ref <commit>`. At the
+shared HEAD the worktree is proven byte-for-byte identical before use. With `--ref` the code differs
+on purpose, and the script says the comparison was skipped. The new
 test files stay untracked in the shared checkout and are copied into the worktree, so only the source
 under test changes.
 

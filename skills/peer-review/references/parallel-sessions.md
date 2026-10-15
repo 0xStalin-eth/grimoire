@@ -15,8 +15,13 @@ patch, not the original code, and a restore can wipe out their patch or put back
    write-ups. Never swap or edit tracked source files in it, not even briefly and not even when you think you are alone.
 2. **Patch and verify in your own worktree.** `verify-fix.sh` does this by default. For manual patch
    probes, create one with `scripts/isolated-worktree.sh create <scratch>/<id>/wt`, work there, and
-   remove it when done. It is HEAD plus the untracked files, so the baseline is the real code and your
-   PoCs are present.
+   remove it when done. It is HEAD plus the untracked files, so your PoCs are present.
+   - **Prove the worktree is identical before using it.** `create` and `sync` compare the isolated and
+     shared trees byte for byte: every tracked and untracked, non-ignored file, plus the dependency
+     symlinks. Any difference stops the run. `create` then removes the worktree and lists the cause, and
+     `verify-fix.sh` runs the same comparison again at the end to show whether the shared checkout changed
+     mid-run. Run `isolated-worktree.sh verify <dir>` yourself before quoting any figure from a manual
+     probe. A baseline that differs from the shared code is not a baseline.
 3. **Take write-up output from a clean run.** PoC output embedded in a write-up must come from a
    run on unmodified code: the isolated worktree, or the shared checkout after confirming that
    `git status` shows no tracked changes under the source folders and no other `forge` process is running.
@@ -49,9 +54,16 @@ patch, not the original code, and a restore can wipe out their patch or put back
   out in a new worktree, and copying them is slow.
 - **Untracked files:** copy all untracked, non-ignored files, not only the PoC files. PoCs import helpers
   (`utils/`, mocks) that are also untracked, and a missing helper fails the whole build.
-- **Do not copy tracked modifications** from the shared checkout. They are someone's temporary patch.
-- **Refresh, don't recreate.** After editing a PoC in the shared checkout, `sync` it into the worktree.
-  Recreating the worktree costs a full rebuild.
+- **Uncommitted edits to tracked files** in the shared checkout make the trees differ, and `create` stops.
+  Find out whose they are. If they are code you mean to test against (your own intended edits), re-run
+  with `--with-modified`, which copies them and then proves the trees identical. If they are another
+  session's temporary patch, wait until the shared checkout is back at HEAD. Never guess.
+- **Refresh, don't recreate.** After editing a PoC in the shared checkout, `sync` the worktree, which
+  mirrors the shared checkout again and re-verifies. It discards edits made inside the worktree. Recreating
+  the worktree costs a full rebuild.
+- **What the comparison skips:** ignored files (build output, caches) and anything under the symlinked
+  dependency folders, which are the shared folders themselves. It reports any submodule outside them as
+  not compared.
 - **Clean up:** `git worktree remove --force <dir>`, then `git worktree prune`.
 
 ## Comparing results

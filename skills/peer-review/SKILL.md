@@ -179,8 +179,10 @@ bash <skill>/scripts/verify-fix.sh \
 ```
 
 The script works in a private git worktree (HEAD plus the repo's untracked files), so the shared
-checkout is never touched and other sessions' temporary patches don't leak into the baseline. It runs
-the suites on the original code, applies the patches, runs them again, prints every test whose result
+checkout is never touched. Before the baseline run it proves the worktree byte-for-byte identical to the
+shared checkout and stops if it isn't (`--with-modified` includes your own uncommitted edits once you
+have confirmed they are yours). At the end it compares again to show whether the shared checkout changed
+mid-run. It runs the suites on the original code, applies the patches, runs them again, prints every test whose result
 changed (keyed by suite and test), and removes the worktree. Pass `--worktree <scratch>/<id>/wt --keep`
 to reuse one across several runs. There is no in-place mode. Take PoC output for the write-up from a
 clean run (`references/parallel-sessions.md`, rule 3). Expected

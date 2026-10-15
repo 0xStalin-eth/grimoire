@@ -1,29 +1,33 @@
 #!/usr/bin/env bash
 # verify-fix.sh — test a candidate fix without touching the shared checkout.
 #
-# The comparison always runs in a private git worktree (scripts/isolated-worktree.sh): HEAD plus the repo's
-# untracked files, so other sessions' temporary patches in the shared checkout neither leak into the "before" run
-# nor get overwritten by this one. The suites run on the original code, the patched files are copied in, the suites
-# run again, and every test whose result changed is printed, keyed by suite. The worktree is removed at the end.
+# The comparison always runs in a private git worktree (scripts/isolated-worktree.sh), so the shared checkout is
+# never touched. Before the baseline run the worktree is proven byte-for-byte identical to the shared checkout; if it
+# is not (uncommitted edits to tracked files there), the script stops and lists them. The suites run on the original
+# code, the patched files are copied in, the suites run again, and every test whose result changed is printed, keyed
+# by suite. At the end the comparison runs again, to show whether the shared checkout changed during the run.
 #
 # Usage: verify-fix.sh --patch <repo/File.sol>=<patched/File.sol> [--patch ...] --suite '<glob>' [--suite ...]
-#                      [--worktree <dir>] [--keep]
+#                      [--worktree <dir>] [--keep] [--with-modified]
 #   --patch     a repo file and the patched copy to swap in for the "after" run (repeatable)
 #   --suite     a forge --match-path glob (repeatable), e.g. 'test/pocs/Issue12*.t.sol' 'test/unit/**'
 #   --worktree  where to create the private worktree (default: a temp dir); reuse saves a rebuild
 #   --keep      keep the worktree for reuse (remove it later with isolated-worktree.sh remove)
+#   --with-modified  include the shared checkout's uncommitted edits to tracked files in the baseline (only after
+#               confirming they are code you want to test against, not another session's temporary patch)
 # Env: FORGE_ARGS  extra arguments for forge test (e.g. "--no-match-path 'test/fork/**'")
 # Run from the repository root.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-patches=(); suites=(); wt=""; keep=0
+patches=(); suites=(); wt=""; keep=0; create_args=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --patch) patches+=("$2"); shift 2 ;;
     --suite) suites+=("$2"); shift 2 ;;
     --worktree) wt="$2"; shift 2 ;;
     --keep) keep=1; shift ;;
+    --with-modified) create_args+=(--with-modified); shift ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -39,21 +43,31 @@ for p in "${patches[@]}"; do
 done
 
 run_dir="${wt:-$work/wt}"
+echo ">>> preparing the isolated worktree and proving it matches the shared checkout"
 if [[ -d "$run_dir" ]]; then
   bash "$here/isolated-worktree.sh" sync "$run_dir"
 else
-  bash "$here/isolated-worktree.sh" create "$run_dir"
+  bash "$here/isolated-worktree.sh" create "$run_dir" ${create_args[@]+"${create_args[@]}"}
 fi
+
+mkdir -p "$work/orig"
+while IFS='=' read -r target _; do
+  mkdir -p "$work/orig/$(dirname "$target")"
+  cp "$run_dir/$target" "$work/orig/$target"
+done < "$work/patches"
 
 restore() {
   while IFS='=' read -r target _; do
-    git -C "$run_dir" checkout -q HEAD -- "$target" 2>/dev/null || true
+    [[ -f "$work/orig/$target" ]] && cp "$work/orig/$target" "$run_dir/$target"
   done < "$work/patches"
+}
+cleanup() {
+  restore
   if [[ $keep -eq 0 ]]; then
     bash "$here/isolated-worktree.sh" remove "$run_dir" >/dev/null 2>&1 || true
   fi
 }
-trap restore EXIT INT TERM
+trap cleanup EXIT INT TERM
 
 results() {
   local out="$1" i=0
@@ -91,15 +105,11 @@ diff "$work/before" "$work/after" || true
 grep -h 'COMPILE-OR-RUN-ERROR' "$work/before" "$work/after" && echo "(a suite produced no results; check it compiles)" || true
 
 restore
-trap - EXIT INT TERM
 echo
-echo "=== restore check"
-ok=1
-while IFS='=' read -r target _; do
-  if [[ $keep -eq 1 ]]; then
-    if git -C "$run_dir" diff --quiet HEAD -- "$target"; then echo "restored: $target"; else echo "NOT RESTORED: $target"; ok=0; fi
-  fi
-  if git -C "$root" diff --quiet HEAD -- "$target"; then echo "shared checkout untouched: $target";
-  else echo "shared checkout differs from HEAD: $target (not by this run; another session's change, leave it)"; fi
-done < "$work/patches"
-[[ $ok -eq 1 ]] || exit 1
+echo "=== end-of-run check: isolated worktree (patch removed) vs shared checkout"
+if bash "$here/isolated-worktree.sh" verify "$run_dir"; then
+  echo "the shared checkout did not change during the run"
+else
+  echo "WARNING: the shared checkout changed during the run (it matched at the start). The results above are"
+  echo "for the code as it was at the start; re-run if the change is meant to be part of the baseline."
+fi
