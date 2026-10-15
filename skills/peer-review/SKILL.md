@@ -35,6 +35,9 @@ and give a verdict the user can act on.
   watching the PoC's bug assertions flip, and diffing the whole test suite before and after.
 - **Never leave the codebase changed.** Every patch is temporary. Restore it and prove it (`git status`
   on the touched paths) before reporting.
+- **Patch only in your own worktree.** Other sessions may be testing in the same checkout. Patch,
+  probe and verify fixes in a private worktree, never by swapping files in the shared one, and never
+  revert changes you didn't make (`references/parallel-sessions.md`).
 - **Correct yourself in the open.** When a later check contradicts an earlier statement (a wrong
   variant, a mis-scoped claim, a flawed fix), say so plainly and update the verdict.
 
@@ -175,8 +178,12 @@ bash <skill>/scripts/verify-fix.sh \
   --suite '<poc-dir>/Issue<N>*.t.sol' --suite '<regression glob>'
 ```
 
-The script runs the suites on the original code, applies the patches, runs them again, restores the
-originals, prints every test whose result changed, and checks the touched paths are clean. Expected
+The script works in a private git worktree (HEAD plus the repo's untracked files), so the shared
+checkout is never touched and other sessions' temporary patches don't leak into the baseline. It runs
+the suites on the original code, applies the patches, runs them again, prints every test whose result
+changed (keyed by suite and test), and removes the worktree. Pass `--worktree <scratch>/<id>/wt --keep`
+to reuse one across several runs, and use `--in-place` only when no other session shares the checkout.
+Take PoC output for the write-up from a clean run (`references/parallel-sessions.md`, rule 3). Expected
 outcome: the PoC's **bug assertions** fail (the bug is gone), and nothing else changes. Investigate every
 other change. A failing test that only fails through a mock path the real code can't reach is not a
 regression, but it shows an **invariant** the fix relies on, and the write-up must state it.
@@ -219,8 +226,14 @@ Only on request. Formats are in `references/deliverables.md`:
 - **Plain language in write-ups:** spell out what symbols mean (`exchangeRate`, not `r`), give
   numbers from the PoC, prefer a small table to a paragraph of figures, and avoid jargon the user
   hasn't used.
-- **Patched copies** live in the scratchpad (`<scratch>/<id>/a` original, `.../b` patched). The repo's
-  contract files are only ever swapped in by `verify-fix.sh` and are always restored.
+- **Patched copies** live in the scratchpad (`<scratch>/<id>/a` original, `.../b` patched). Source files
+  are only patched inside a private worktree (`verify-fix.sh`, or `scripts/isolated-worktree.sh` for
+  manual probes), never in the shared checkout. Probes that compile only against a patch stay in the
+  scratchpad, because in the PoC folder they break every other session's build.
+- **Parallel sessions:** before trusting a run in the shared checkout, check `git status` on the source
+  folders and `pgrep -fl 'forge (test|build)'`. If another session changed files, leave them, tell
+  the user, and run in your own worktree. If you touched a shared file, message the affected sessions.
+  See `references/parallel-sessions.md`.
 - **Track the queue** in a pending-reviews tome (`examples/pending-tome-template.md`) so parked
   findings and open leads survive across sessions.
 - **Grimoire hand-offs:** `/write-poc` for complex exploit PoCs, `/finding-review` for polishing the
@@ -232,5 +245,7 @@ Only on request. Formats are in `references/deliverables.md`:
 - `references/severity-calibration.md`: severity checklist and common up/down arguments
 - `references/duplicate-analysis.md`: root-cause test, symptom vs root, clusters, own-dup handling
 - `references/fix-verification.md`: patch-verify-restore loop and recurring fix patterns
+- `references/parallel-sessions.md`: working beside other sessions in one checkout (isolation, clean
+  baselines, etiquette, result comparison)
 - `references/deliverables.md`: formats for every follow-up artifact
 - `examples/verdict-template.md`, `examples/pending-tome-template.md`, `examples/session-marker-template.md`
