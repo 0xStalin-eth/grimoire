@@ -103,6 +103,8 @@ has never opened this repo understand the vulnerability from this section alone?
 - Every test the write-up cites must be in the write-up itself, embedded with its output. Do
   not cite a test that only exists in the repo, in another draft or in a separate comment: the
   reader of this write-up must be able to run every figure it quotes from what it contains.
+- Never wrap a PoC (or any code) in `<details>` / `<summary>` collapsible tags. Put the code
+  block directly after the sentence that introduces it ("Save it as `<path>`:").
 - Keep it concise. If you need more than 4 paragraphs, move technical detail to the
   Details section.
 
@@ -213,5 +215,6 @@ Use this during review to catch frequent issues:
 - [ ] Another finding referenced as a bare `#N` instead of `[issue-N](link)`
 - [ ] A PoC result cited as "the PoC" without naming the test function it comes from
 - [ ] A cited test that is not embedded (with its output) in the write-up itself
+- [ ] A PoC or code block wrapped in `<details>` / `<summary>` collapsible tags
 - [ ] Preconditions not stated (assumes the reader knows requirements)
 - [ ] Uses project-specific jargon without explanation

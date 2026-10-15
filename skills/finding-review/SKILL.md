@@ -92,6 +92,8 @@ are what the reader uses to decide whether the finding applies to their deployme
   `test_PoC_<Name>`, ..."), never a bare "the PoC"; give the PoC file path at least once. Every
   test cited must be embedded, with its output, in the same write-up file: no figure may point to
   a test that lives only in another file or another comment.
+- **No collapsible blocks:** never wrap a PoC (or any code) in `<details>` / `<summary>` tags.
+  The code block follows its introducing sentence directly ("Save it as `<path>`:").
 
 **PoC reference** — does the `@`-referenced file exist? Is it correctly formatted?
 

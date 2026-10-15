@@ -106,6 +106,8 @@ rules are mandatory in every section; re-check the draft against them before pre
   `test_PoC_<Name>`, ..."), never a bare "the PoC"; give the PoC file path at least once. Every
   test cited must be embedded, with its output, in the same write-up file: no figure may point to
   a test that lives only in another file or another comment.
+- **No collapsible blocks:** never wrap a PoC (or any code) in `<details>` / `<summary>` tags.
+  The code block follows its introducing sentence directly ("Save it as `<path>`:").
 
 **## Description** (mandatory) — 2-4 self-contained paragraphs covering component, flaw,
 preconditions, and impact. If the familiar produced a feasibility predicate or
