@@ -3,7 +3,8 @@
 #
 # Everything runs INSIDE the git workspace this is started from: the comparison uses a private copy in
 # <workspace>/.isolated/<name>/ (scripts/isolated-workspace.sh) and keeps its scratch files in
-# <workspace>/.isolated/.verify-<name>/. Nothing is written above the workspace root. The patched files are only read.
+# <workspace>/.isolated/.verify-<name>/. Nothing is read or written outside the workspace: patched files must be inside
+# it too (e.g. .isolated/work/i<N>/b/), and sibling workspaces of the same repo are refused.
 #
 # Before the baseline run the copy is proven byte-for-byte identical to the workspace; if it is not (uncommitted edits
 # to tracked files), the script stops and lists them. The suites run on the original code, the patched files are
@@ -23,6 +24,8 @@ set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 iso_sh="$here/isolated-workspace.sh"
+# shellcheck source=_workspace-guard.sh
+source "$here/_workspace-guard.sh"
 patches=(); suites=(); name="verify-$$"; keep=0; create_args=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -40,12 +43,19 @@ case "$name" in ""|.*|*/*) echo "invalid --name: $name" >&2; exit 2 ;; esac
 root="$(git rev-parse --show-toplevel)"
 cd "$root"
 work="$root/.isolated/.verify-$name"
-rm -rf "$work"; mkdir -p "$work"
 
 for p in "${patches[@]}"; do
   target="${p%%=*}"; patched="${p#*=}"
   case "$target" in /*|*..*) echo "--patch target must be a relative path inside the workspace: $target" >&2; exit 2 ;; esac
   [[ -f "$root/$target" && -f "$patched" ]] || { echo "missing file in --patch $p" >&2; exit 2; }
+  require_inside "a --patch target" "$root/$target"
+  require_inside "a --patched file" "$patched"
+done
+rm -rf "$work"; mkdir -p "$work"
+require_inside "the scratch folder" "$work"
+
+for p in "${patches[@]}"; do
+  target="${p%%=*}"; patched="${p#*=}"
   patched_abs="$(cd "$(dirname "$patched")" && pwd)/$(basename "$patched")"
   echo "$target=$patched_abs" >> "$work/patches"
 done

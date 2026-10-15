@@ -32,7 +32,7 @@ for the report's `**Cyfrin:**` field.
 
 | Input | Example | Where it's stored |
 |---|---|---|
-| Report | `2026-09-17-cyfrin-<client>-v0.0.md` | GRIMOIRE.md header |
+| Report | `2026-09-17-cyfrin-<client>-v0.0.md`, inside this workspace (copy it in if it lives in another checkout; the scripts refuse paths outside) | GRIMOIRE.md header |
 | Findings repo | `Cyfrin/audit-2026-09-<client>` | GRIMOIRE.md header |
 | Baseline (audited) commit | `37f06bb` | GRIMOIRE.md header |
 | Mitigation commit | `be70792` | GRIMOIRE.md header |

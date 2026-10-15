@@ -12,6 +12,8 @@ set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
 report="${1:?usage: link-issues.sh <report.md> <owner/repo>}"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_workspace-guard.sh"
+require_inside "the report" "$report"
 repo="${2:?usage: link-issues.sh <report.md> <owner/repo>}"
 
 issues="$(gh issue list --repo "$repo" --state all --limit 500 --json number,title \

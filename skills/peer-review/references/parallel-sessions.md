@@ -11,12 +11,20 @@ patch, not the original code, and a restore can wipe out their patch or put back
 
 ## Rules
 
-0. **Stay inside the workspace.** Every file a review writes, and every command it runs, stays inside
-   the git workspace the session runs in. That covers copies, patched files, builds and scratch output.
-   Nothing goes in a parent folder, the system temp folder, or a `git worktree` (which registers itself
-   in the git directory, often above the workspace). The scripts enforce this: they put everything
-   under `<workspace>/.isolated/` and refuse destinations outside the workspace root. Patched files you
-   pass to them are only read.
+0. **Stay inside the workspace.** Every file a review reads or writes, and every command it runs, stays
+   inside the git workspace the session runs in. That covers inputs, copies, patched files, builds and
+   scratch output. **Other workspaces are off limits even when they belong to the same engagement**, such
+   as sibling checkouts that share one git directory (a manual-audit checkout, a fixes checkout, a report
+   checkout). Nothing goes in a parent folder, the system temp folder, or a `git worktree`, which
+   registers itself in the git directory, often above the workspace. The scripts enforce this with
+   `_workspace-guard.sh`:
+   - every path they read or write is resolved with symlinks followed and refused unless it lands inside
+     the workspace;
+   - the isolated copy refuses dependency folders or symlinks that lead outside, and writes only inside
+     `<workspace>/.isolated/`.
+
+   If an input lives in another checkout (a report, a finding mirror), copy it into this workspace first.
+   git itself reads the shared object store, and only for this workspace's commits.
 1. **The shared checkout is read-mostly.** Write only new, untracked files there: your PoCs, probes,
    write-ups. Never swap or edit tracked source files in it, not even briefly and not even when you think
    you are alone.

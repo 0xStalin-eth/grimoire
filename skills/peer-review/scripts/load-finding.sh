@@ -28,10 +28,15 @@ while [[ $# -gt 0 ]]; do
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_workspace-guard.sh"
+require_inside "--mirror" "$mirror"
+require_inside "--findings" "$findings"
+require_inside "--tests" "$tests"
 
 file="$(ls "$mirror"/issue"$n"-*.md 2>/dev/null | head -1 || true)"
 echo "=== Finding #$n"
 if [[ -n "$file" ]]; then
+  require_inside "the mirrored finding" "$file"
   echo "(local mirror: $file)"
   cat "$file"
 elif [[ -n "$repo" ]]; then

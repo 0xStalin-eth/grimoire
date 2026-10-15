@@ -9,6 +9,8 @@
 set -euo pipefail
 
 report="${1:?usage: index-report.sh <report.md>}"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_workspace-guard.sh"
+require_inside "the report" "$report"
 [ -f "$report" ] || { echo "error: $report not found" >&2; exit 1; }
 
 awk '

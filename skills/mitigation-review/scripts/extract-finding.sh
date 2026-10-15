@@ -10,6 +10,8 @@ set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
 report="${1:?usage: extract-finding.sh <report.md> <ID|title-substring>}"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_workspace-guard.sh"
+require_inside "the report" "$report"
 key="${2:?usage: extract-finding.sh <report.md> <ID|title-substring>}"
 
 if [[ "$key" =~ ^[CHMLIG]-[0-9]+$ ]]; then

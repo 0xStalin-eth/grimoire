@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # isolated-workspace.sh — a private copy of the workspace for patching and testing, proven byte-for-byte identical.
 #
-# Everything stays INSIDE the git workspace this runs from: the copy lives in <workspace>/.isolated/<name>/, which a
-# `.gitignore` of `*` keeps out of `git status` and out of other sessions' copies. Nothing is written above the
-# workspace root (no system temp dir, no `git worktree` metadata in a shared git dir); git is only read.
+# Everything stays INSIDE the git workspace this runs from. Nothing is read from or written to any other workspace,
+# sibling checkouts of the same repo included: dependency links and symlinks that lead outside are refused, and no
+# write may leave the copy. The copy lives in <workspace>/.isolated/<name>/, which a `.gitignore` of `*` keeps out of
+# `git status` and out of other sessions' copies. Nothing is written above the workspace root (no system temp dir,
+# no `git worktree` metadata in the shared git dir); git is only read.
 #
 # The copy holds every tracked and untracked, non-ignored file of the workspace; dependency folders (lib,
 # node_modules) are symlinks to the workspace's own. After every create and sync, `verify` compares the two byte for
@@ -42,7 +44,14 @@ STATE = ".isolated-state.json"
 def inside(path):
     p = os.path.realpath(path)
     return p == root or p.startswith(root + os.sep)
-assert inside(iso) and os.path.realpath(iso) != root, "the copy must live inside the workspace"
+if os.path.islink(iso):
+    if cmd == "remove":
+        os.remove(iso)                    # drop the link itself, never what it points to
+        print(f"removed the link {iso} (its target was not touched)")
+        sys.exit(0)
+    sys.exit(f"REFUSED: {iso} is a symlink to {os.path.realpath(iso)}; remove it first")
+if not inside(iso) or os.path.realpath(iso) == root:
+    sys.exit(f"REFUSED: {iso} resolves to {os.path.realpath(iso)}, outside the workspace (is .isolated a symlink?)")
 
 opts = {"links": [], "excepts": [], "with_modified": False, "ref": "HEAD"}
 i = 0
@@ -55,6 +64,19 @@ while i < len(rest):
         else: opts["excepts"].append(rest[i + 1].strip("/"))
         i += 2
     else: sys.exit(f"unknown argument: {a}")
+
+def outside(path):
+    """True when path, with symlinks followed, leads out of the workspace (e.g. into a sibling workspace)."""
+    return not inside(path)
+
+def check_boundaries(links, files):
+    """Refuse dependency links or workspace symlinks that lead outside the workspace."""
+    bad = [f"  dependency folder {l} -> {os.path.realpath(os.path.join(root, l))}" for l in links
+           if outside(os.path.join(root, l))]
+    bad += [f"  symlink {p} -> {os.path.realpath(os.path.join(root, p))}" for p in files
+            if os.path.islink(os.path.join(root, p)) and outside(os.path.join(root, p))]
+    if bad:
+        sys.exit("REFUSED: these lead outside the workspace (another workspace or folder):\n" + "\n".join(bad))
 
 def git(*a, inp=None):
     return subprocess.run(["git", "-C", root, *a], input=inp, capture_output=True, check=True).stdout
@@ -78,6 +100,9 @@ def copy_files(files):
         if not os.path.lexists(src):
             continue                      # deleted in the workspace
         os.makedirs(os.path.dirname(dst), exist_ok=True)
+        if not os.path.realpath(os.path.dirname(dst)).startswith(os.path.realpath(iso) + os.sep) \
+                and os.path.realpath(os.path.dirname(dst)) != os.path.realpath(iso):
+            sys.exit(f"REFUSED: writing {p} would leave the isolated copy")
         if os.path.lexists(dst) or os.path.islink(dst):
             os.remove(dst)
         shutil.copy2(src, dst, follow_symlinks=False)
@@ -173,6 +198,7 @@ if cmd == "create":
     ref = git("rev-parse", opts["ref"] + "^{commit}").decode().strip()
     ensure_base()
     if ref != head:
+        check_boundaries(links, [])
         os.makedirs(iso)
         tar = subprocess.run(["git", "-C", root, "archive", "--format=tar", ref], capture_output=True, check=True).stdout
         subprocess.run(["tar", "-x", "-C", iso], input=tar, check=True)
@@ -180,6 +206,7 @@ if cmd == "create":
         copy_files([p.decode() for p in others.split(b"\0") if p and not under(p.decode(), links + [".isolated"])])
     else:
         refuse_if_modified(opts["with_modified"])
+        check_boundaries(links, workspace_files(links))
         os.makedirs(iso)
         copy_files(workspace_files(links))
     make_links(links)
@@ -204,6 +231,7 @@ elif cmd == "sync":
         sys.exit(0)
     refuse_if_modified(st["with_modified"])
     want = workspace_files(links)
+    check_boundaries(links, want)
     for p in sorted(iso_files(links, []) - set(want)):
         os.remove(os.path.join(iso, p))
     copy_files(want)
