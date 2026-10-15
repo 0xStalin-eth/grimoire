@@ -5,7 +5,7 @@
 1. **Copy** the files you'll change into the scratchpad: `<scratch>/<id>/a/` (original) and
    `<scratch>/<id>/b/` (patched). Check the repo copy equals `a/` before you start.
 2. **Patch** `b/` with exact string replacements (assert each pattern matches exactly once).
-3. **Run** `scripts/verify-fix.sh` with the PoC and the regression suites. It runs in a private
+3. **Run** `scripts/verify-fix.sh` with the PoC and the regression suites. It always runs in a private
    worktree, so the shared checkout and other sessions' runs are never affected:
    - the PoC's **bug assertions should now fail** (that is the bug being gone);
    - the PoC's control tests should still pass;

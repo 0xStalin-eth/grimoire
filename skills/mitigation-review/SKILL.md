@@ -132,8 +132,8 @@ Follow `references/poc-patterns.md`. The minimum is:
 3. **Residual / bypass probes** for every concern raised in B2.
 4. **The client's regression test** for the fix (from the fix commits) also passes.
 
-When other sessions share the checkout, don't check out other commits, swap source files, or run
-`prefix-snapshot.sh` output against swapped code in it. Do those steps in a private worktree:
+Always, even when you are the only session, keep the shared checkout free of other commits and
+swapped source files. Do any step that needs them in a private worktree:
 `bash skills/peer-review/scripts/isolated-worktree.sh create <scratch>/<ID>/wt --ref <commit>`. The new
 test files stay untracked in the shared checkout and are copied into the worktree, so only the source
 under test changes.
@@ -206,7 +206,8 @@ on a new version.
 - Keep every PoC passing. Re-run the mitigation suite before Phase C:
   `forge test --match-path 'test/mitigation/*'` (fork suites with the RPC set).
 - Don't commit unless asked.
-- **Parallel sessions:** several reviews may run in one checkout. Follow
+- **Isolation, always:** apply these rules on every review, even in a single session, because another
+  session can start in the same checkout at any time. Follow
   `skills/peer-review/references/parallel-sessions.md`:
   - patch and probe only in a private worktree;
   - take PoC output for write-ups from a clean run;

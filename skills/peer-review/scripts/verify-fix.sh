@@ -1,32 +1,29 @@
 #!/usr/bin/env bash
 # verify-fix.sh — test a candidate fix without touching the shared checkout.
 #
-# By default the comparison runs in a private git worktree (scripts/isolated-worktree.sh): HEAD plus the repo's
+# The comparison always runs in a private git worktree (scripts/isolated-worktree.sh): HEAD plus the repo's
 # untracked files, so other sessions' temporary patches in the shared checkout neither leak into the "before" run
 # nor get overwritten by this one. The suites run on the original code, the patched files are copied in, the suites
 # run again, and every test whose result changed is printed, keyed by suite. The worktree is removed at the end.
 #
 # Usage: verify-fix.sh --patch <repo/File.sol>=<patched/File.sol> [--patch ...] --suite '<glob>' [--suite ...]
-#                      [--worktree <dir>] [--keep] [--in-place]
+#                      [--worktree <dir>] [--keep]
 #   --patch     a repo file and the patched copy to swap in for the "after" run (repeatable)
 #   --suite     a forge --match-path glob (repeatable), e.g. 'test/pocs/Issue12*.t.sol' 'test/unit/**'
 #   --worktree  where to create the private worktree (default: a temp dir); reuse saves a rebuild
 #   --keep      keep the worktree for reuse (remove it later with isolated-worktree.sh remove)
-#   --in-place  swap files in the current checkout instead (only when no other session uses it);
-#               refuses when a patched file already differs from HEAD
 # Env: FORGE_ARGS  extra arguments for forge test (e.g. "--no-match-path 'test/fork/**'")
 # Run from the repository root.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-patches=(); suites=(); wt=""; keep=0; inplace=0
+patches=(); suites=(); wt=""; keep=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --patch) patches+=("$2"); shift 2 ;;
     --suite) suites+=("$2"); shift 2 ;;
     --worktree) wt="$2"; shift 2 ;;
     --keep) keep=1; shift ;;
-    --in-place) inplace=1; shift ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -41,28 +38,18 @@ for p in "${patches[@]}"; do
   echo "$target=$patched_abs" >> "$work/patches"
 done
 
-if [[ $inplace -eq 1 ]]; then
-  run_dir="$root"
-  while IFS='=' read -r target _; do
-    git -C "$root" diff --quiet HEAD -- "$target" \
-      || { echo "refusing --in-place: $target differs from HEAD (another session's patch?)" >&2; exit 1; }
-  done < "$work/patches"
-  others="$(pgrep -fl 'forge (test|build)' || true)"
-  [[ -z "$others" ]] || echo "warning: forge is already running elsewhere; results may be contaminated:"$'\n'"$others" >&2
+run_dir="${wt:-$work/wt}"
+if [[ -d "$run_dir" ]]; then
+  bash "$here/isolated-worktree.sh" sync "$run_dir"
 else
-  run_dir="${wt:-$work/wt}"
-  if [[ -d "$run_dir" ]]; then
-    bash "$here/isolated-worktree.sh" sync "$run_dir"
-  else
-    bash "$here/isolated-worktree.sh" create "$run_dir"
-  fi
+  bash "$here/isolated-worktree.sh" create "$run_dir"
 fi
 
 restore() {
   while IFS='=' read -r target _; do
     git -C "$run_dir" checkout -q HEAD -- "$target" 2>/dev/null || true
   done < "$work/patches"
-  if [[ $inplace -eq 0 && $keep -eq 0 ]]; then
+  if [[ $keep -eq 0 ]]; then
     bash "$here/isolated-worktree.sh" remove "$run_dir" >/dev/null 2>&1 || true
   fi
 }
@@ -109,10 +96,10 @@ echo
 echo "=== restore check"
 ok=1
 while IFS='=' read -r target _; do
-  if [[ $inplace -eq 1 || $keep -eq 1 ]]; then
+  if [[ $keep -eq 1 ]]; then
     if git -C "$run_dir" diff --quiet HEAD -- "$target"; then echo "restored: $target"; else echo "NOT RESTORED: $target"; ok=0; fi
   fi
   if git -C "$root" diff --quiet HEAD -- "$target"; then echo "shared checkout untouched: $target";
-  else echo "shared checkout differs from HEAD: $target (not by this run unless --in-place)"; fi
+  else echo "shared checkout differs from HEAD: $target (not by this run; another session's change, leave it)"; fi
 done < "$work/patches"
 [[ $ok -eq 1 ]] || exit 1

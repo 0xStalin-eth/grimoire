@@ -1,5 +1,9 @@
 # Parallel Sessions on One Repo
 
+**These rules apply on every review, even when you are the only session.** Another session can start
+in the same checkout at any time, and you can't see it coming. Working the same way every time is also
+what makes a single-session review safe to run alongside the next one.
+
 Several sessions often review findings side by side in the same checkout: one per issue, each
 reproducing, probing and verifying fixes. A file one session swaps in for a fix run is live for every
 other session's `forge test` in that window. A run that overlaps someone else's swap measures their
@@ -8,7 +12,7 @@ patch, not the original code, and a restore can wipe out their patch or put back
 ## Rules
 
 1. **The shared checkout is read-mostly.** Write only new, untracked files there: your PoCs, probes,
-   write-ups. Never swap or edit tracked source files in it while another session may be running.
+   write-ups. Never swap or edit tracked source files in it, not even briefly and not even when you think you are alone.
 2. **Patch and verify in your own worktree.** `verify-fix.sh` does this by default. For manual patch
    probes, create one with `scripts/isolated-worktree.sh create <scratch>/<id>/wt`, work there, and
    remove it when done. It is HEAD plus the untracked files, so the baseline is the real code and your
