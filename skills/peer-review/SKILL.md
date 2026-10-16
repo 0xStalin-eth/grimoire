@@ -230,9 +230,10 @@ Only on request. Formats are in `references/deliverables.md`:
   probe validated. Probe files may stay, but no write-up may reference or embed tests for ideas that
   were ruled out or left out; do not delete probe files unless asked.
   Ask before creating a new folder; a mistyped path usually means the existing one.
-- **Plain language in write-ups:** spell out what symbols mean (`exchangeRate`, not `r`), give
-  numbers from the PoC, prefer a small table to a paragraph of figures, and avoid jargon the user
-  hasn't used.
+- **Plain language in write-ups:** never use one-letter shorthand for a quantity, even after
+  defining it once; write the variable name (`exchangeRate`, not `r`) or a plain phrase at every
+  occurrence, formulas included. Give numbers from the PoC, prefer a small table to a paragraph
+  of figures, and avoid jargon the user hasn't used.
 - **Patched copies** live in the work folder inside the workspace (`.isolated/work/i<N>/a` original,
   `.../b` patched). Source files are only patched inside an isolated copy (`verify-fix.sh`, or
   `scripts/isolated-workspace.sh` for manual probes), never in the workspace itself. Probes that compile

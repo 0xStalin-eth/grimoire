@@ -29,7 +29,8 @@ For readers new to the bug. Markdown, ready to paste above the finding's Descrip
 - Explain the normal behaviour first, then the case that breaks it.
 - Use one small table or worked example with numbers from the PoC.
 - End with the consequence in one sentence.
-- No unexplained symbols; spell out what each variable means.
+- No one-letter shorthand, even if defined once: write the variable name or a plain phrase at
+  every occurrence, formulas included (`srtPnLProjected / valuationPrice`, not `P / price`).
 
 ## Comment (downgrade, Informational, recovery runbook)
 

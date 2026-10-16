@@ -94,6 +94,10 @@ are what the reader uses to decide whether the finding applies to their deployme
   a test that lives only in another file or another comment.
 - **No collapsible blocks:** never wrap a PoC (or any code) in `<details>` / `<summary>` tags.
   The code block follows its introducing sentence directly ("Save it as `<path>`:").
+- **No one-letter shorthand:** never stand a letter in for a quantity (`P`, `R`, `D`, `x`, `p`, `Δ`),
+  even after defining it once. Write the contract variable (`srtPnLProjected`, `valuationPrice`) or
+  a plain phrase ("the realized-loss claim") at every occurrence, formulas included. Before finishing,
+  grep the prose for backticked single letters. Test code embedded verbatim is exempt.
 
 **PoC reference** — does the `@`-referenced file exist? Is it correctly formatted?
 
