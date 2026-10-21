@@ -44,7 +44,9 @@ for the report's `**Cyfrin:**` field.
 If GRIMOIRE.md doesn't exist, run `/summon` first. If any input is missing from GRIMOIRE.md, ask
 once, then record it there.
 
-Scripts live in this skill's `scripts/` directory; run them from the repo root (`$S` below).
+Scripts live in this skill's `scripts/` directory (`$S` below) and in the peer-review skill's
+`scripts/` directory (`$P` below: `isolated-workspace.sh`, `verify-fix.sh`). Both are Grimoire paths, not
+paths inside the reviewed repo; run every script from the repo root.
 
 ---
 
@@ -134,18 +136,20 @@ check for unfixed siblings, and the `grimoire:familiar` to challenge any residua
 Follow `references/poc-patterns.md`. The minimum is:
 
 1. **Pre-fix reproduces.** Config fixes: the report's inputs now revert. Logic fixes:
-   `$S/prefix-snapshot.sh <src-file> <fix-commit> test/mitigation`, then `deployCodeTo` it. Layout
-   changes: use an isolated copy at `<fix-commit>^` (below).
+   `$S/prefix-snapshot.sh <src-file> <fix-commit> test/mitigation <ID>`, then `deployCodeTo` it. The
+   snapshot is named after the finding (`<Name>PreFix<Id>.sol`), so parallel sessions never overwrite each
+   other's, and it is removed again if the old code does not compile against the current tree. Layout
+   changes, or a snapshot that does not compile: use an isolated copy at `<fix-commit>^` (below).
 2. **Post-fix passes** with the report's own figures.
 3. **Residual / bypass probes** for every concern raised in B2.
 4. **The client's regression test** for the fix (from the fix commits) also passes.
 
 Always, even when you are the only session, keep the shared checkout free of other commits and
 swapped source files. Do any step that needs them in an isolated copy inside the workspace:
-`bash skills/peer-review/scripts/isolated-workspace.sh create <ID> --ref <commit>`. It is created at
+`bash $P/isolated-workspace.sh create <ID> --ref <commit>`. It is created at
 `.isolated/<session-id>/<ID>/`, owned by this session, and nothing goes above the workspace root. Keep it
 until the user closes the finding's review; never use or remove another session's copies
-(`peer-review/references/parallel-sessions.md`, rule 9). A copy at the workspace's HEAD is proven
+(the peer-review skill's `references/parallel-sessions.md`, rule 9). A copy at the workspace's HEAD is proven
 byte-for-byte identical before use; with `--ref` the code differs on purpose, and the script says the
 comparison was skipped. The new test files stay untracked in the workspace and are copied into the
 isolated copy, so only the source under test changes.
@@ -154,6 +158,22 @@ Put the tests in `test/mitigation/<ID>MitigationReview.t.sol` (template:
 `examples/MitigationReview.t.sol.template`), scoped with `--match-path`. If a fork test needs an RPC
 the shell lacks, ask the user to export it (never echo the URL). If a PoC fails, report the failure
 and its output; don't call the fix verified.
+
+**When you propose a code change** (a residual fix, a hardening, a corrected version of the client's
+fix), verify it the way peer reviews do, never by editing `src/` in the workspace. Copy the files into
+this session's work folder (`bash $P/isolated-workspace.sh work <ID>` prints it; `a/` original, `b/`
+patched) and run:
+
+```bash
+bash $P/verify-fix.sh --name <ID> \
+  --patch <src/path/File.sol>=.isolated/<session-id>/work/<ID>/b/File.sol \
+  --suite 'test/mitigation/<ID>*' --suite '<regression glob>'
+```
+
+It proves its isolated copy byte-identical to the workspace, runs the suites before and after the patch,
+and prints every result that changed. Expect the residual PoC to flip and nothing else; investigate any
+other change. Quote only a verified diff in the write-up, and keep the work folder until the user closes
+the finding's review.
 
 Skip PoCs only for renames and docs-only changes. For those, grep that no stale reference is left and
 state "no behaviour change, no PoC".
@@ -220,7 +240,7 @@ on a new version.
 - Don't commit unless asked.
 - **Isolation, always:** apply these rules on every review, even in a single session, because another
   session can start in the same checkout at any time. Follow
-  `skills/peer-review/references/parallel-sessions.md`:
+  the peer-review skill's `references/parallel-sessions.md`:
   - patch and probe only in an isolated copy inside the workspace;
   - take PoC output for write-ups from a clean run;
   - check `git status` and running `forge` processes before trusting a shared-checkout run;

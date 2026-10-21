@@ -25,20 +25,25 @@ Pick the cheapest that works:
    `vm.expectRevert(Err.selector)` on the report's exact inputs, plus boundary ±1.
 2. **Swap in the old code at the same address** (logic fixes in a contract):
    ```bash
-   prefix-snapshot.sh <src-file> <fix-commit> test/mitigation
+   prefix-snapshot.sh <src-file> <fix-commit> test/mitigation <ID>
    ```
-   then in the test:
+   It writes `<Name>PreFix<Id>.sol` (finding ID without punctuation, e.g. `H-1` -> `H1`), so snapshots
+   of the same contract for different findings, or from parallel sessions, never overwrite each other.
+   It refuses to overwrite an existing snapshot, and it compiles the new one and removes it if the old
+   code no longer builds against the current tree (a broken file in the shared test folder breaks every
+   session's build); then use option 3. Then in the test:
    ```solidity
    // Imported so the artifact is compiled for `deployCodeTo`.
-   import {XPreFix} from "./XPreFix.sol";
+   import {XPreFixH1} from "./XPreFixH1.sol";
    ...
-   deployCodeTo("XPreFix.sol:XPreFix", abi.encode(<constructor args>), address(x));
+   deployCodeTo("XPreFixH1.sol:XPreFixH1", abi.encode(<constructor args>), address(x));
    ```
    Immutables are rebuilt from the constructor args; storage stays. Only valid if the storage layout
    and constructor didn't change in the fix — check the snapshot's diff.
 3. **Layout/ABI changes** (storage re-pack, type widening): can't swap. Reproduce in an isolated copy
    of the pre-fix code inside the workspace, and run the test there:
-   `bash skills/peer-review/scripts/isolated-workspace.sh create prefix-<ID> --ref <fix-commit>^`.
+   `bash $P/isolated-workspace.sh create prefix-<ID> --ref <fix-commit>^` (`$P` is the peer-review
+   skill's `scripts/` folder). The copy lives in `.isolated/<session-id>/` and is kept until the review closes.
    Or rely on the client's pre-fix PoC from the original report. Never `git checkout` in the review
    workspace, and never create anything above its root.
 
