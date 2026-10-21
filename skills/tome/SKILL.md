@@ -40,6 +40,11 @@ write the evidence gap clearly.
 - Mark uncertain material as open questions, not facts.
 - Do not change evidence to match a conclusion.
 - Documentation describes intent; matching code or observation describes behavior.
+- Write full meanings, never one-letter placeholders for a quantity, a time or any other value (`T`,
+  `t`, `X`, `x`), even after defining them once. Use the contract's name (`effectiveAt`,
+  `newMultiplier`) or a plain phrase ("the split being re-applied", "the holder"), formulas and call
+  examples included (`setUIMultiplier(1e18, effectiveAt)`, not `setUIMultiplier(1e18, t)`). Tome
+  text is often pasted into reports and notes, so it follows the same rule as findings.
 
 ## Relationship To Grimoire
 

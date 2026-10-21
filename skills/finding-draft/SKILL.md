@@ -108,10 +108,13 @@ rules are mandatory in every section; re-check the draft against them before pre
   a test that lives only in another file or another comment.
 - **No collapsible blocks:** never wrap a PoC (or any code) in `<details>` / `<summary>` tags.
   The code block follows its introducing sentence directly ("Save it as `<path>`:").
-- **No one-letter shorthand:** never stand a letter in for a quantity (`P`, `R`, `D`, `x`, `p`, `Δ`),
-  even after defining it once. Write the contract variable (`srtPnLProjected`, `valuationPrice`) or
-  a plain phrase ("the realized-loss claim") at every occurrence, formulas included. Before finishing,
-  grep the prose for backticked single letters. Test code embedded verbatim is exempt.
+- **No one-letter shorthand:** never stand a letter in for a quantity, a time, an address or any other
+  value (`P`, `R`, `D`, `x`, `p`, `Δ`, `T`, `t`, `X`), even after defining it once. Write the contract
+  variable (`srtPnLProjected`, `valuationPrice`, `effectiveAt`) or a plain phrase ("the realized-loss
+  claim", "the split being re-applied") at every occurrence, formulas and call examples included
+  (`setUIMultiplier(1e18, effectiveAt)`, not `setUIMultiplier(1e18, T)`). Before finishing, grep the
+  prose for backticked single letters and single-letter call arguments. Test code embedded verbatim
+  is exempt.
 
 **## Description** (mandatory) — 2-4 self-contained paragraphs covering component, flaw,
 preconditions, and impact. If the familiar produced a feasibility predicate or

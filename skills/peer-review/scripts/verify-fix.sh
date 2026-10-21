@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # verify-fix.sh — test a candidate fix without touching the workspace's own files.
 #
-# Everything runs INSIDE the git workspace this is started from: the comparison uses a private copy in
-# <workspace>/.isolated/<name>/ (scripts/isolated-workspace.sh) and keeps its scratch files in
-# <workspace>/.isolated/.verify-<name>/. Nothing is read or written outside the workspace: patched files must be inside
+# Everything runs INSIDE the git workspace this is started from: the comparison uses this session's private copy in
+# <workspace>/.isolated/<session-id>/<name>/ (scripts/isolated-workspace.sh) and keeps its scratch files in
+# <workspace>/.isolated/<session-id>/.verify-<name>/. The copy is KEPT after the run (it is reused by the next run with
+# the same --name); remove it with `isolated-workspace.sh remove <name>` only once the user has closed the lead.
+# Nothing is read or written outside the workspace: patched files must be inside
 # it too (e.g. .isolated/work/i<N>/b/), and sibling workspaces of the same repo are refused.
 #
 # Before the baseline run the copy is proven byte-for-byte identical to the workspace; if it is not (uncommitted edits
@@ -12,11 +14,11 @@
 # comparison runs again, to show whether the workspace changed during the run.
 #
 # Usage: verify-fix.sh --patch <repo/File.sol>=<patched/File.sol> [--patch ...] --suite '<glob>' [--suite ...]
-#                      [--name <name>] [--keep] [--with-modified]
+#                      --name <name> [--with-modified]
 #   --patch     a repo file and the patched copy to swap in for the "after" run (repeatable)
 #   --suite     a forge --match-path glob (repeatable), e.g. 'test/pocs/Issue12*.t.sol' 'test/unit/**'
-#   --name      name of the isolated copy (default: verify-<pid>); reuse a kept one to save a rebuild
-#   --keep      keep the copy for reuse (remove it later with isolated-workspace.sh remove <name>)
+#   --name      name of this session's isolated copy (required, e.g. i12); an existing one is synced and reused
+#   --keep      accepted for compatibility; copies are always kept
 #   --with-modified  include the workspace's uncommitted edits to tracked files in the baseline (only after
 #               confirming they are code you want to test against, not another session's temporary patch)
 # Env: FORGE_ARGS  extra arguments for forge test (e.g. "--no-match-path 'test/fork/**'")
@@ -26,23 +28,25 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 iso_sh="$here/isolated-workspace.sh"
 # shellcheck source=_workspace-guard.sh
 source "$here/_workspace-guard.sh"
-patches=(); suites=(); name="verify-$$"; keep=0; create_args=()
+patches=(); suites=(); name=""; create_args=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --patch) patches+=("$2"); shift 2 ;;
     --suite) suites+=("$2"); shift 2 ;;
     --name) name="$2"; shift 2 ;;
-    --keep) keep=1; shift ;;
+    --keep) shift ;;
     --with-modified) create_args+=(--with-modified); shift ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 [[ ${#patches[@]} -gt 0 && ${#suites[@]} -gt 0 ]] || { echo "need at least one --patch and one --suite" >&2; exit 2; }
+[[ -n "$name" ]] || { echo "need --name <name> (this session's isolated copy, e.g. i12)" >&2; exit 2; }
 case "$name" in ""|.*|*/*) echo "invalid --name: $name" >&2; exit 2 ;; esac
 
 root="$(git rev-parse --show-toplevel)"
 cd "$root"
-work="$root/.isolated/.verify-$name"
+session_dir="$(bash "$iso_sh" session)" || exit 2
+work="$session_dir/.verify-$name"
 
 for p in "${patches[@]}"; do
   target="${p%%=*}"; patched="${p#*=}"
@@ -61,7 +65,7 @@ for p in "${patches[@]}"; do
 done
 
 echo ">>> preparing the isolated copy and proving it matches the workspace"
-if [[ -e "$root/.isolated/$name" ]]; then
+if [[ -e "$session_dir/$name" ]]; then
   bash "$iso_sh" sync "$name"
 else
   bash "$iso_sh" create "$name" ${create_args[@]+"${create_args[@]}"}
@@ -81,7 +85,6 @@ restore() {
 }
 cleanup() {
   restore
-  [[ $keep -eq 1 ]] || bash "$iso_sh" remove "$name" >/dev/null 2>&1 || true
   rm -rf "$work"
 }
 trap cleanup EXIT INT TERM

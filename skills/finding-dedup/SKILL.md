@@ -52,7 +52,9 @@ For each pair of findings, compare title, type, context (affected files), and de
 Classify each pair as:
 
 - **Duplicate** — same root cause, same affected component, same impact. One can be deleted
-  without losing information.
+  without losing information. A finding that is a **symptom** of another finding's root cause
+  (the other finding's fix removes it) is also a duplicate, even when its impact differs: keep the
+  finding that names the root and fold the symptom's extra impact into it.
 - **Similar** — overlapping root cause or component but different scope or impact. Cannot
   delete without information loss. May benefit from cross-referencing or merging.
 - **Distinct** — no meaningful overlap. No action needed.

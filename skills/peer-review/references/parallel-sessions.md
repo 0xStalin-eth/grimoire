@@ -21,16 +21,18 @@ patch, not the original code, and a restore can wipe out their patch or put back
    - every path they read or write is resolved with symlinks followed and refused unless it lands inside
      the workspace;
    - the isolated copy refuses dependency folders or symlinks that lead outside, and writes only inside
-     `<workspace>/.isolated/`.
+     `<workspace>/.isolated/<session-id>/`.
 
    If an input lives in another checkout (a report, a finding mirror), copy it into this workspace first.
    git itself reads the shared object store, and only for this workspace's commits.
 1. **The shared checkout is read-mostly.** Write only new, untracked files there: your PoCs, probes,
    write-ups. Never swap or edit tracked source files in it, not even briefly and not even when you think
    you are alone.
-2. **Patch and verify in an isolated copy.** `verify-fix.sh` always does this. For manual patch probes,
-   create one with `scripts/isolated-workspace.sh create i<N>`, work in `.isolated/i<N>/`, and remove it
-   when done. It holds every tracked and untracked file of the workspace, so your PoCs are present.
+2. **Patch and verify in your own isolated copy.** `verify-fix.sh` always does this. For manual patch
+   probes, create one with `scripts/isolated-workspace.sh create i<N>` and work in the folder that
+   `isolated-workspace.sh path i<N>` prints (`.isolated/<session-id>/i<N>/`). It holds every tracked and
+   untracked file of the workspace, so your PoCs are present. Keep it until the user closes the lead
+   (rule 9).
    - **Prove the copy is identical before using it.** `create` and `sync` compare the copy and the
      workspace byte for byte: every tracked and untracked, non-ignored file, plus the dependency
      symlinks. Any difference stops the run. `create` then removes the copy and lists the cause, and
@@ -51,7 +53,8 @@ patch, not the original code, and a restore can wipe out their patch or put back
    Say which files changed and for how long, and that the files are back at HEAD. When you receive such a
    message, check its claims (`git status`, compare with HEAD), re-run anything that overlapped, and reply
    saying what you re-ran and whether results changed.
-7. **One work folder per finding, inside the workspace.** Use `.isolated/work/i<N>/`:
+7. **One work folder per finding, inside your session folder.** Use `isolated-workspace.sh work i<N>`,
+   which creates and prints `.isolated/<session-id>/work/i<N>/`:
    - `a/` for the originals and `b/` for the patched copies;
    - the diff;
    - a backup of any PoC you rewrite.
@@ -60,13 +63,23 @@ patch, not the original code, and a restore can wipe out their patch or put back
    PoC folder they break every other session's build.
 8. **Never use `git stash` in a shared repo.** The stash stack is shared across checkouts. To set work
    aside, copy the files into your work folder.
+9. **One session, one folder; never touch another session's.** Copies and work folders live under
+   `.isolated/$CLAUDE_CODE_SESSION_ID/`, and the scripts refuse to run without that id. `claude --resume`
+   keeps the id, so a resumed session finds its copies; `--fork-session` starts a new id and an empty
+   folder. Never read results from, run in, or remove another session's folder, even one that looks
+   abandoned: list them with `isolated-workspace.sh list` and leave the clean-up to the user.
+   Keep your own copies until the user explicitly closes the lead they serve (accepted or discarded); only
+   then run `isolated-workspace.sh remove <name>`.
 
 ## Isolated copy notes
 
-- **Location:** `<workspace>/.isolated/<name>/`. The script writes `.isolated/.gitignore` with `*`, so the
-  folder never shows in `git status`, is never copied into another session's copy, and is outside the
-  folders forge and Hardhat compile from the workspace root. `work` is a reserved name for the work
-  folders.
+- **Location:** `<workspace>/.isolated/<session-id>/<name>/`, with an `.owner` file naming the session.
+  Names resolve only inside the current session's folder (no `/` or `..`), and `remove` also checks
+  `.owner` and that the target is a copy the script made. The script writes `.isolated/.gitignore` with
+  `*`, so the folder never shows in `git status`, is never copied into another session's copy, and is
+  outside the folders forge and Hardhat compile from the workspace root. `work` is a reserved name for
+  the work folders. Copies made before per-session folders (`.isolated/<name>/`) show in `list` as
+  legacy and are never touched by the script.
 - **Dependencies:** `lib/` and `node_modules/` are symlinks to the workspace's own folders. Copying them
   is slow, and they are compared by checking where the links point. `remove` deletes the links, never
   what they point to.
@@ -83,7 +96,8 @@ patch, not the original code, and a restore can wipe out their patch or put back
   `git archive` into the copy, then adds the untracked files. The comparison is skipped and says so.
 - **What the comparison skips:** files the workspace ignores (build output, caches) and anything under the
   symlinked dependency folders. It reports any submodule outside them as not compared.
-- **Clean up:** `isolated-workspace.sh remove <name>`.
+- **Clean up:** `isolated-workspace.sh remove <name>`, only once the user has closed the lead. See what
+  is alive, per session, with `isolated-workspace.sh list`.
 
 ## Comparing results
 

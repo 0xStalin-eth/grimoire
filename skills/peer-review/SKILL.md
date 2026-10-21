@@ -36,9 +36,14 @@ and give a verdict the user can act on.
 - **Never leave the codebase changed.** Every patch is temporary. Restore it and prove it (`git status`
   on the touched paths) before reporting.
 - **Patch only in an isolated copy, always, and stay inside the workspace.** Even when you are the only
-  session, patch, probe and verify fixes in an isolated copy under `<workspace>/.isolated/`. Never swap
-  source files in the workspace itself, never write or run anything above its root, and never revert
-  changes you didn't make (`references/parallel-sessions.md`).
+  session, patch, probe and verify fixes in an isolated copy under `<workspace>/.isolated/<session-id>/`.
+  Never swap source files in the workspace itself, never write or run anything above its root, and never
+  revert changes you didn't make (`references/parallel-sessions.md`).
+- **Your copies are yours, and they stay.** Each session works only in its own folder,
+  `.isolated/$CLAUDE_CODE_SESSION_ID/`; the scripts resolve names there and cannot reach another
+  session's copies. Keep every copy and work folder until the user explicitly closes the lead it serves
+  (validated and accepted, or invalidated and discarded). Follow-up questions reuse it; removing it early
+  forces a full rebuild.
 - **Correct yourself in the open.** When a later check contradicts an earlier statement (a wrong
   variant, a mis-scoped claim, a flawed fix), say so plainly and update the verdict.
 
@@ -52,7 +57,7 @@ and give a verdict the user can act on.
 | Baseline and audited commits | GRIMOIRE.md Scope ("delta" range), used to decide pre-existing vs new code |
 | In-scope paths, trust assumptions | GRIMOIRE.md Scope / Trust assumptions |
 | PoC directory | The project's existing PoC folder (e.g. `test/PoC/<Org>/`); never create a new one silently |
-| Work folder | `<workspace>/.isolated/work/i<N>/` for patched copies and backups (never outside the workspace) |
+| Work folder | `isolated-workspace.sh work i<N>` → `<workspace>/.isolated/<session-id>/work/i<N>/` for patched copies and backups |
 
 If GRIMOIRE.md doesn't exist, run `/summon` first. If an input is missing, ask once and record it in
 GRIMOIRE.md. Scripts live in this skill's `scripts/` directory; run them from the target repo root.
@@ -163,10 +168,13 @@ Follow `references/duplicate-analysis.md`. Two findings are duplicates when they
 **and** one fix closes both. A shared code site, symptom, or theme is not enough. For every candidate:
 - state each root in one line;
 - check whether each fix closes the other finding (test it if cheap);
-- say whether the finding under review is a **symptom** of a broader root already filed;
+- say whether the finding under review is a **symptom** of a broader root already filed; a symptom of
+  another finding's root cause is a duplicate of it, even when the impact differs (keep the root
+  finding, move the extra impact into a comment on it);
 - check whether another finding's fix (preferably the client's actual commit) **resolves** the one
   under review even without a shared root; if its PoC stops reproducing and the precondition cannot
-  recur, suggest closing it as resolved by that fix (see "Resolved by another finding's fix").
+  recur, suggest keeping it open with a comment that the other fix also resolves it. Close only
+  duplicates, symptoms included (see "Resolved by another finding's fix").
 
 When several findings share a root, list them as a cluster with one row per symptom, and point to the
 single fix that closes the cluster.
@@ -178,18 +186,19 @@ concrete fix is needed, **ask before writing it**, and verify it:
 
 ```bash
 bash <skill>/scripts/verify-fix.sh \
-  --patch <repo/path/File.sol>=.isolated/work/i<N>/b/File.sol \
+  --name i<N> \
+  --patch <repo/path/File.sol>=.isolated/<session-id>/work/i<N>/b/File.sol \
   --suite '<poc-dir>/Issue<N>*.t.sol' --suite '<regression glob>'
 ```
 
-The script works in an isolated copy at `<workspace>/.isolated/<name>/` (every tracked and untracked
+The script works in this session's isolated copy at `<workspace>/.isolated/<session-id>/<name>/` (every tracked and untracked
 file of the workspace), so the workspace's own files are never touched and nothing is written above its
 root. Before the baseline run it proves the copy byte-for-byte identical to the workspace and stops if it
 isn't (`--with-modified` includes your own uncommitted edits once you have confirmed they are yours). At
 the end it compares again to show whether the workspace changed mid-run. It runs the suites on the
 original code, applies the patches, runs them again, prints every test whose result changed (keyed by
-suite and test), and removes the copy. Pass `--name i<N> --keep` to reuse one across several runs. There
-is no in-place mode. Take PoC output for the write-up from a clean run (`references/parallel-sessions.md`,
+suite and test), and puts the copy back to the original code. The copy is kept: the next run with the
+same `--name` syncs and reuses it instead of rebuilding. There is no in-place mode. Take PoC output for the write-up from a clean run (`references/parallel-sessions.md`,
 rule 3). Expected
 outcome: the PoC's **bug assertions** fail (the bug is gone), and nothing else changes. Investigate every
 other change. A failing test that only fails through a mock path the real code can't reach is not a
@@ -230,11 +239,13 @@ Only on request. Formats are in `references/deliverables.md`:
   probe validated. Probe files may stay, but no write-up may reference or embed tests for ideas that
   were ruled out or left out; do not delete probe files unless asked.
   Ask before creating a new folder; a mistyped path usually means the existing one.
-- **Plain language in write-ups:** never use one-letter shorthand for a quantity, even after
-  defining it once; write the variable name (`exchangeRate`, not `r`) or a plain phrase at every
-  occurrence, formulas included. Give numbers from the PoC, prefer a small table to a paragraph
+- **Plain language in write-ups:** never use one-letter shorthand for a quantity, a time or any other
+  value, even after defining it once; write the variable name (`exchangeRate`, not `r`;
+  `effectiveAt`, not `T`) or a plain phrase at every occurrence, formulas and call examples included
+  (`setUIMultiplier(1e18, effectiveAt)`, not `setUIMultiplier(1e18, T)`). This covers comments, tomes
+  and notes, not just findings. Give numbers from the PoC, prefer a small table to a paragraph
   of figures, and avoid jargon the user hasn't used.
-- **Patched copies** live in the work folder inside the workspace (`.isolated/work/i<N>/a` original,
+- **Patched copies** live in this session's work folder (`.isolated/<session-id>/work/i<N>/a` original,
   `.../b` patched). Source files are only patched inside an isolated copy (`verify-fix.sh`, or
   `scripts/isolated-workspace.sh` for manual probes), never in the workspace itself. Probes that compile
   only against a patch stay in the work folder, because in the PoC folder they break every other

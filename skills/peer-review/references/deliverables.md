@@ -30,7 +30,9 @@ For readers new to the bug. Markdown, ready to paste above the finding's Descrip
 - Use one small table or worked example with numbers from the PoC.
 - End with the consequence in one sentence.
 - No one-letter shorthand, even if defined once: write the variable name or a plain phrase at
-  every occurrence, formulas included (`srtPnLProjected / valuationPrice`, not `P / price`).
+  every occurrence, formulas and call examples included (`srtPnLProjected / valuationPrice`, not
+  `P / price`; `setUIMultiplier(1e18, effectiveAt)` … "after that `effectiveAt`", not
+  `setUIMultiplier(1e18, T)` … "after `T`").
 
 ## Comment (downgrade, Informational, recovery runbook)
 

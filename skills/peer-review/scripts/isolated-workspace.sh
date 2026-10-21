@@ -7,6 +7,12 @@
 # `git status` and out of other sessions' copies. Nothing is written above the workspace root (no system temp dir,
 # no `git worktree` metadata in the shared git dir); git is only read.
 #
+# Every copy belongs to ONE session. Copies and work folders live under <workspace>/.isolated/<session-id>/, where the
+# session id is $CLAUDE_CODE_SESSION_ID (kept by `claude --resume`; `--fork-session` starts a new id). Names resolve
+# only inside the current session's folder, so a session cannot name, sync or remove another session's copy, and the
+# script refuses to run at all without a session id. `remove` additionally checks the folder's .owner file. Copies are
+# kept until the user closes the lead they serve; nothing here removes a copy on its own.
+#
 # The copy holds every tracked and untracked, non-ignored file of the workspace; dependency folders (lib,
 # node_modules) are symlinks to the workspace's own. After every create and sync, `verify` compares the two byte for
 # byte (sha256 of every file, plus the symlink targets) and exits 1 on any difference.
@@ -20,7 +26,10 @@
 #   isolated-workspace.sh sync   <name>     # mirror the workspace again (DISCARDS edits made in the copy), verify
 #   isolated-workspace.sh verify <name> [--except <path>]...
 #   isolated-workspace.sh path   <name>     # print the copy's absolute path
-#   isolated-workspace.sh remove <name>
+#   isolated-workspace.sh remove <name>     # only when the user has closed the lead (accepted or discarded)
+#   isolated-workspace.sh work   <name>     # create and print this session's work folder for <name> (a/, b/, diffs)
+#   isolated-workspace.sh session           # print this session's folder
+#   isolated-workspace.sh list              # read-only: every session folder, its copies, age and size
 #
 #   --with-modified  accept uncommitted edits to tracked files and copy them as they are
 #   --ref            build the copy from another commit (mitigation reviews); the comparison is skipped and says so
@@ -31,15 +40,89 @@ root="$(git rev-parse --show-toplevel)"
 exec python3 -I - "$root" "$@" <<'PY'
 import hashlib, os, shutil, subprocess, sys, json
 
+import re, time
 root, args = os.path.realpath(sys.argv[1]), sys.argv[2:]
-if len(args) < 2:
-    sys.exit("usage: isolated-workspace.sh create|sync|verify|path|remove <name> [options]")
-cmd, name, rest = args[0], args[1], args[2:]
-if not name or "/" in name or name.startswith(".") or name == "work":
-    sys.exit(f"invalid name {name!r}: use a plain folder name, e.g. i68 ('work' is reserved for patched copies)")
+USAGE = "usage: isolated-workspace.sh create|sync|verify|path|remove|work <name> [options] | session | list"
+if not args:
+    sys.exit(USAGE)
 base = os.path.join(root, ".isolated")
-iso = os.path.join(base, name)
 STATE = ".isolated-state.json"
+OWNER = ".owner"
+
+sid = os.environ.get("CLAUDE_CODE_SESSION_ID", "")
+if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9-]{7,63}", sid):
+    sys.exit("REFUSED: no session id ($CLAUDE_CODE_SESSION_ID is unset or malformed). Isolated copies are per session;"
+             " run this from the Claude Code session that owns the copy.")
+sbase = os.path.join(base, sid)
+
+def human(n):
+    for u in ("B", "K", "M", "G"):
+        if n < 1024: return f"{n:.0f}{u}"
+        n /= 1024
+    return f"{n:.0f}T"
+
+def tree_size(path):
+    total = 0
+    for d, dirs, files in os.walk(path):
+        dirs[:] = [x for x in dirs if not os.path.islink(os.path.join(d, x))]
+        for f in files:
+            fp = os.path.join(d, f)
+            if not os.path.islink(fp):
+                try: total += os.path.getsize(fp)
+                except OSError: pass
+    return total
+
+if args[0] == "list":
+    if not os.path.isdir(base):
+        sys.exit(print("no isolated copies in this workspace") or 0)
+    for entry in sorted(os.listdir(base)):
+        d = os.path.join(base, entry)
+        if entry.startswith(".") or not os.path.isdir(d) or os.path.islink(d):
+            continue
+        owner_file = os.path.join(d, OWNER)
+        if os.path.exists(owner_file):
+            try: o = json.load(open(owner_file))
+            except Exception: o = {}
+            tag = " (THIS SESSION)" if entry == sid else ""
+            print(f"session {entry}{tag}  created {o.get('created', '?')}")
+            for c in sorted(os.listdir(d)):
+                cp = os.path.join(d, c)
+                if c.startswith(".") or not os.path.isdir(cp): continue
+                age = (time.time() - os.path.getmtime(cp)) / 86400
+                kind = "work folders" if c == "work" else "copy"
+                print(f"  {c:<24} {kind:<12} {human(tree_size(cp)):>6}  modified {age:.1f}d ago")
+        else:
+            kind = "legacy copy, no owner" if os.path.exists(os.path.join(d, STATE)) else "folder, no owner"
+            print(f"{entry}  ({kind}; created before per-session folders, never touched by this script)")
+    sys.exit(0)
+
+if args[0] == "session":
+    print(sbase)
+    sys.exit(0)
+
+if len(args) < 2:
+    sys.exit(USAGE)
+cmd, name, rest = args[0], args[1], args[2:]
+if not name or "/" in name or name.startswith(".") or name == "work" or ".." in name:
+    sys.exit(f"invalid name {name!r}: use a plain folder name, e.g. i68 ('work' is reserved for patched copies)")
+iso = os.path.join(sbase, name)
+
+def check_owner(create=False):
+    """The session folder must be ours: its .owner names this session id."""
+    if os.path.islink(base) or os.path.islink(sbase):
+        sys.exit(f"REFUSED: {base} or {sbase} is a symlink")
+    owner_file = os.path.join(sbase, OWNER)
+    if not os.path.exists(owner_file):
+        if not create:
+            sys.exit(f"REFUSED: {sbase} has no {OWNER} file; nothing here belongs to session {sid}")
+        os.makedirs(sbase, exist_ok=True)
+        with open(owner_file, "w") as f:
+            json.dump({"session": sid, "created": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "workspace": root}, f)
+        return
+    try: o = json.load(open(owner_file))
+    except Exception: sys.exit(f"REFUSED: {owner_file} is unreadable")
+    if o.get("session") != sid:
+        sys.exit(f"REFUSED: {sbase} is owned by session {o.get('session')!r}, not {sid}")
 
 def inside(path):
     p = os.path.realpath(path)
@@ -52,6 +135,8 @@ if os.path.islink(iso):
     sys.exit(f"REFUSED: {iso} is a symlink to {os.path.realpath(iso)}; remove it first")
 if not inside(iso) or os.path.realpath(iso) == root:
     sys.exit(f"REFUSED: {iso} resolves to {os.path.realpath(iso)}, outside the workspace (is .isolated a symlink?)")
+if os.path.dirname(os.path.realpath(iso)) != os.path.realpath(sbase) and os.path.exists(sbase):
+    sys.exit(f"REFUSED: {iso} does not resolve to a folder directly inside this session's {sbase}")
 
 opts = {"links": [], "excepts": [], "with_modified": False, "ref": "HEAD"}
 i = 0
@@ -181,6 +266,7 @@ def ensure_base():
     if not os.path.exists(gi):
         with open(gi, "w") as f:
             f.write("*\n")
+    check_owner(create=True)
 
 def make_links(links):
     for l in links:
@@ -189,6 +275,9 @@ def make_links(links):
         elif os.path.isdir(dst): shutil.rmtree(dst)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         os.symlink(os.path.join(root, l), dst)
+
+if cmd != "create" and cmd != "work":
+    check_owner()
 
 if cmd == "create":
     if os.path.lexists(iso):
@@ -248,9 +337,18 @@ elif cmd == "path":
     print(iso)
 
 elif cmd == "remove":
-    if os.path.lexists(iso):
-        shutil.rmtree(iso)
-    print(f"removed {iso}")
+    if not os.path.lexists(iso):
+        sys.exit(f"nothing to remove: {iso} does not exist")
+    if not os.path.exists(os.path.join(iso, STATE)):
+        sys.exit(f"REFUSED: {iso} has no {STATE}; it is not an isolated copy made by this script")
+    shutil.rmtree(iso)
+    print(f"removed {iso} (session {sid})")
+
+elif cmd == "work":
+    ensure_base()
+    w = os.path.join(sbase, "work", name)
+    os.makedirs(w, exist_ok=True)
+    print(w)
 
 else:
     sys.exit(f"unknown command: {cmd}")

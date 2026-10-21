@@ -105,10 +105,12 @@ has never opened this repo understand the vulnerability from this section alone?
   reader of this write-up must be able to run every figure it quotes from what it contains.
 - Never wrap a PoC (or any code) in `<details>` / `<summary>` collapsible tags. Put the code
   block directly after the sentence that introduces it ("Save it as `<path>`:").
-- Never use one-letter shorthand for a quantity (`P`, `R`, `D`, `x`, `p`, `Δ`), even after
-  defining it once ("an open projection `P`"). Write the contract variable (`srtPnLProjected`,
-  `valuationPrice`) or a plain phrase ("the realized-loss claim") at every occurrence, formulas
-  included, so the reader never has to translate. Test code embedded verbatim is exempt.
+- Never use one-letter shorthand for a quantity, a time, an address or any other value (`P`, `R`,
+  `D`, `x`, `p`, `Δ`, `T`, `t`, `X`), even after defining it once ("an open projection `P`", "at time
+  `T`"). Write the contract variable (`srtPnLProjected`, `valuationPrice`, `effectiveAt`) or a plain
+  phrase ("the realized-loss claim", "the split being re-applied") at every occurrence, formulas and
+  call examples included (`setUIMultiplier(1e18, effectiveAt)`, not `setUIMultiplier(1e18, T)`), so
+  the reader never has to translate. Test code embedded verbatim is exempt.
 - Keep it concise. If you need more than 4 paragraphs, move technical detail to the
   Details section.
 
@@ -220,6 +222,6 @@ Use this during review to catch frequent issues:
 - [ ] A PoC result cited as "the PoC" without naming the test function it comes from
 - [ ] A cited test that is not embedded (with its output) in the write-up itself
 - [ ] A PoC or code block wrapped in `<details>` / `<summary>` collapsible tags
-- [ ] A quantity written as a one-letter symbol (`P`, `x`, `R / price`), even if defined once
+- [ ] A quantity, time or other value written as a one-letter symbol (`P`, `x`, `R / price`, `T`, `setUIMultiplier(1e18, t)`), even if defined once
 - [ ] Preconditions not stated (assumes the reader knows requirements)
 - [ ] Uses project-specific jargon without explanation

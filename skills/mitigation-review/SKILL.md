@@ -26,6 +26,8 @@ for the report's `**Cyfrin:**` field.
 - **Realism before severity.** Before raising a residual, ask who triggers it, what they control, and
   how many uncontrollable events it needs. Unrealistic residuals become footnotes, not findings.
 - **Short and plain.** Write-ups are 1–3 sentences in simple words. Detail lives in the review file.
+  Never use one-letter placeholders for a quantity, a time or any other value (`T`, `t`, `X`, `x`),
+  even after defining them once: write the contract's name (`effectiveAt`) or a plain phrase.
 - **Don't touch `src/`.** PoCs go in `test/mitigation/`. Pre-fix code is swapped in at test time.
 
 ## Inputs
@@ -57,8 +59,8 @@ Scripts live in this skill's `scripts/` directory; run them from the repo root (
 ### A1. Confirm inputs
 
 Run the review from the checkout that has the fix commits (often a separate checkout used only for
-fixes). The scripts are confined to the workspace they start in: its HEAD, its files, and its
-`.isolated/` copies. Every other checkout of the repo, including the one used for the audit itself, is
+fixes). The scripts are confined to the workspace they start in: its HEAD, its files, and this
+session's `.isolated/<session-id>/` copies. Every other checkout of the repo, including the one used for the audit itself, is
 off limits. So the report, GRIMOIRE.md and any findings mirror must be in this checkout too. Copy them
 in, or run `/summon` here.
 
@@ -141,7 +143,9 @@ Follow `references/poc-patterns.md`. The minimum is:
 Always, even when you are the only session, keep the shared checkout free of other commits and
 swapped source files. Do any step that needs them in an isolated copy inside the workspace:
 `bash skills/peer-review/scripts/isolated-workspace.sh create <ID> --ref <commit>`. It is created at
-`.isolated/<ID>/`, and nothing goes above the workspace root. A copy at the workspace's HEAD is proven
+`.isolated/<session-id>/<ID>/`, owned by this session, and nothing goes above the workspace root. Keep it
+until the user closes the finding's review; never use or remove another session's copies
+(`peer-review/references/parallel-sessions.md`, rule 9). A copy at the workspace's HEAD is proven
 byte-for-byte identical before use; with `--ref` the code differs on purpose, and the script says the
 comparison was skipped. The new test files stay untracked in the workspace and are copied into the
 isolated copy, so only the source under test changes.
