@@ -39,7 +39,7 @@ for the report's `**Cyfrin:**` field.
 | Baseline (audited) commit | `37f06bb` | GRIMOIRE.md header |
 | Mitigation commit | `be70792` | GRIMOIRE.md header |
 | In-scope paths | `src/vault-v2 src/risk-engines` | GRIMOIRE.md Scope |
-| Client name + git remote of the client repo | `Acme`, remote `client` | GRIMOIRE.md header |
+| Client name + git remote of the client's own external repo (not the Cyfrin audit repo) | `Acme`, remote `client` | GRIMOIRE.md header |
 
 If GRIMOIRE.md doesn't exist, run `/summon` first. If any input is missing from GRIMOIRE.md, ask
 once, then record it there.
@@ -53,7 +53,7 @@ paths inside the reviewed repo; run every script from the repo root.
 ## Phase A — Setup (once per engagement; skip steps already done)
 
 ```
-- [ ] A1. Confirm inputs and record them in GRIMOIRE.md
+- [ ] A1. Confirm inputs, record them in GRIMOIRE.md, and fresh-pull the findings mirror
 - [ ] A2. Build the findings → issue → fix index
 - [ ] A3. Add the status table to GRIMOIRE.md
 ```
@@ -63,11 +63,17 @@ paths inside the reviewed repo; run every script from the repo root.
 Run the review from the checkout that has the fix commits (often a separate checkout used only for
 fixes). The scripts are confined to the workspace they start in: its HEAD, its files, and this
 session's `.isolated/<session-id>/` copies. Every other checkout of the repo, including the one used for the audit itself, is
-off limits. So the report, GRIMOIRE.md and any findings mirror must be in this checkout too. Copy them
-in, or run `/summon` here.
+off limits. So the report and GRIMOIRE.md must be in this checkout too. Copy them in, or run
+`/summon` here.
 
 Check `git log -1 <mitigation-commit>` and `git log -1 <baseline>` resolve, `gh auth status` works,
 and the report file exists. Note fork-test env vars the repo uses (`grep -r "vm.envString\|rpc_endpoints" test foundry.toml`).
+
+**Findings mirror: always a fresh pull.** Peer review and mitigation review happen in different
+workspaces, and each one keeps its own mirror. Never copy the mirror from the audit or peer-review
+checkout. Pull it from GitHub with `/findings-sync` into `grimoire/findings/original-repo-findings`
+(`findings_sync.py --repo <owner/repo> --mirror <mirror> pull --new`). If this checkout already has a
+mirror, run `status` and `pull --new` for any issues it is missing.
 
 ### A2. Build the index
 
@@ -93,16 +99,31 @@ Add a `### Finding → mitigation status` table to GRIMOIRE.md (`| Finding | PR 
 
 ---
 
-## Phase B — Per finding (the user names the finding: ID, title, or issue URL)
+## Phase B — Per finding (the user names the finding: ID, title, issue number, or issue URL)
 
 ```
+- [ ] B0. Refresh the issue in the findings mirror
 - [ ] B1. Load finding, thread, and fix diff
 - [ ] B2. Review the fix
 - [ ] B3. Verify with PoCs
 - [ ] B4. Decide the verdict
 - [ ] B5. Record (review file + GRIMOIRE status)
 - [ ] B6. Present + Cyfrin write-up
+- [ ] B7. Close (when the user closes the review): move the review file to `done/`
 ```
+
+### B0. Refresh
+
+Before every review, check the issue on GitHub for edits and new comments since it was mirrored:
+
+```bash
+python3 <findings-sync>/scripts/findings_sync.py --repo <owner/repo> --mirror <mirror> update <N>
+```
+
+The update keeps the replaced version in `history/` and reports "up to date" when nothing changed. If
+the issue isn't mirrored yet, `pull <N>` it. Tell the user what changed (body lines, new comments,
+state) before reviewing. A new client comment can link a different fix, or an agreement that changes
+the verdict.
 
 ### B1. Load
 
@@ -200,7 +221,8 @@ Reply in this order, briefly:
 3. **PoCs** — the table (test → result) and the pass count, or why there are none.
 4. **Notes** — numbered residuals with their rating, if any.
 5. The write-up, following `references/writeup-format.md`: first the client line with the fix commit links
-   (`$S/commit-links.sh <client-remote> <sha | #PR | PR-URL>...`; PRs resolve to their merge commit, never link a PR), then `**Cyfrin:**` on its own line and the text as
+   (`$S/commit-links.sh <client-remote> <sha | #PR | PR-URL>...`; PRs resolve to their merge commit, never link a PR;
+   links point to the client's external repo named in the client's comment, never to the Cyfrin audit repo), then `**Cyfrin:**` on its own line and the text as
    **one single unwrapped line**, no blockquote:
 
    **<Client>:**
@@ -216,6 +238,16 @@ Expect follow-ups: "shorter", "simpler wording", "in md format", "write the reco
 led to this mitigation", "propose hardening to the client", "justify X". Their shapes are in
 `references/writeup-format.md`. Update the review file's write-up section whenever the user settles
 on a new version.
+
+### B7. Close
+
+When the user closes a finding's review, move its review file into the `done/` subfolder:
+`grimoire/findings/<ID>-mitigation-review.md` → `grimoire/findings/done/<ID>-mitigation-review.md`
+(create `done/` if missing). Update that finding's GRIMOIRE.md status link to
+`[[findings/done/<ID>-mitigation-review]]`, and any other link to the file (`grep -rl
+"<ID>-mitigation-review" grimoire/ GRIMOIRE.md`). Don't move a review the user hasn't closed: a
+**Partially fixed** or pending-client review stays in `findings/` until the user says it is closed.
+Only then remove this session's isolated copies for the finding (`isolated-workspace.sh remove <name>`).
 
 ---
 

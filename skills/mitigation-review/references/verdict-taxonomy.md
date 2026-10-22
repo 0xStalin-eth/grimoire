@@ -26,6 +26,9 @@ Rate residuals independently of the original finding, using the realism question
 
 `**<Verdict>** (<≤12-word reason>) — [[findings/<ID>-mitigation-review]]`
 
+Once the review is closed and its file moved (SKILL.md B7), the link becomes
+`[[findings/done/<ID>-mitigation-review]]`.
+
 Examples:
 - `**Fixed** (untracked priority entries skipped) — [[findings/L-5-mitigation-review]]`
 - `**Partially fixed** (1-day setter floor; zero deploy default still steps NAV) — [[findings/L-6-mitigation-review]]`

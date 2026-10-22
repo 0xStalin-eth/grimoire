@@ -19,6 +19,10 @@ url="$(git remote get-url "$remote")"
 url="${url%.git}"
 url="${url/git@github.com:/https://github.com/}"
 slug="${url#https://github.com/}"
+# The report links the client's own repo; the Cyfrin audit repo is internal and readers can't open it.
+case "$(printf '%s' "$slug" | tr '[:upper:]' '[:lower:]')" in
+  cyfrin/*) echo "error: remote '$remote' is the Cyfrin repo $slug; use a remote for the client's own repo" >&2; exit 1 ;;
+esac
 
 resolve() {
   local ref="$1" pr=""

@@ -14,7 +14,12 @@ review file holds the detail; the write-up only states what changed and why it c
   Use the PR merge commits in the client's repo, 7-character short hash as link text and the full hash in the URL,
   joined with ` && `. **Never link a PR**: when the fix was read from a PR, link that PR's merge commit. Generate the
   links with `scripts/commit-links.sh <client-remote> <sha | #PR | PR-URL>...`, which resolves PRs to their merge
-  commit and fails on an unmerged PR. For docs-only or
+  commit and fails on an unmerged PR. **Links always point to the client's own external repo** (e.g.
+  `https://github.com/Strata-Markets/contracts/commit/<full-sha>`), **never to the Cyfrin internal audit repo**
+  (`Cyfrin/audit-...`), even when the same SHA exists there: readers of the report can't open the audit repo. Take
+  the repo from the client's comment on the issue. The audit checkout's `origin` is usually the Cyfrin repo, so add
+  the client repo as a remote (`git remote add client https://github.com/<org>/<repo>`) or write the URL by hand;
+  `commit-links.sh` refuses a `Cyfrin/` remote. For docs-only or
   acknowledged items, use the same line shape with the matching verb (e.g. `Acknowledged; documented at commitHash …`).
 - **Layout (mandatory):** `**Cyfrin:**` alone on the first line; the verdict text on the next line as **one single
   unwrapped line**. No blockquote (`>`), no hard wrapping inside the paragraph. An optional second paragraph (notes
