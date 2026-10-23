@@ -36,7 +36,7 @@ in_progress before starting it and completed when done.
 ```
 - [ ] 0. Acquire target from bug bounty program — fetch scope, resolve & clone in-scope repos  (ONLY if invoked with a program URL/slug)
 - [ ] 1. Verify workspace layout — confirm directory structure, identify in-scope repo(s)
-- [ ] 2. Create audit directory structure — set up grimoire/, findings/, spells/, tomes/
+- [ ] 2. Create audit directory structure — set up grimoire/, findings/, hypotheses/, spells/, tomes/, report-deliverables/
 - [ ] 3. Build initial context — language, tooling, frameworks, integrations, problem & approach
 - [ ] 4. Map architecture and flows — identify structure, primary flows, key components
 - [ ] 5. Identify crown jewels — determine high-impact targets and threat model
@@ -138,11 +138,76 @@ project/
     in_scope_repo/              # already present
     grimoire/
         findings/               # findings during this audit
+            SESSIONS.md         # session log (see below)
+            invalid/            # discarded, closed or invalidated
+            valid/              # valid / submitted
+            WIP/                # every new finding file lands here
+            original-findings/  # findings-repo mirror kept by /findings-sync
+                CLOSED/
+                originals/
+                history/
+        peer-review/            # reviews of findings by peers or AI agents (/peer-review)
+            SESSIONS.md
+            archived/           # discarded, closed or invalidated
+            done/               # valid / submitted
+            WIP/                # every new peer-review file lands here
+        mitigation-review/      # client-fix reviews (/mitigation-review)
+            SESSIONS.md
+            archived/           # discarded, closed or invalidated
+            done/               # review closed
+            PENDINGS/           # partially fixed / invalid mitigation, waiting on the client
+            WIP/                # every new mitigation-review file lands here
+        hypotheses/             # leads not yet proven or disproven
+            SESSIONS.md
+            invalid/            # discarded, closed or invalidated
+            valid/              # promoted to a finding (its write-up starts in findings/WIP/)
+            WIP/                # every new hypothesis file lands here
         sigil-findings/         # findings sourced from sigil agents
         spells/                 # scripts, PoCs, static analysis modules
         tomes/                  # documentation, detailed notes, learnings
+            SESSIONS.md
+            active/
+            archived/
+        client-communication/   # conversations with the client: one <finding-ID>.md per finding
+            SESSIONS.md
+        report-deliverables/
+            protocol-summary.md
+            executive-summary.md
         tmp/                    # temporary files and scripts
     GRIMOIRE.md                 # main contextual map (created in step 6)
+```
+
+Create `protocol-summary.md` and `executive-summary.md` as empty files; they are filled in later
+in the engagement.
+
+**Session logs.** `findings/`, `hypotheses/`, `peer-review/`, `mitigation-review/`, `tomes/` and
+`client-communication/` each get a `SESSIONS.md` at their root, so any file in them can be traced
+back to the Claude Code session that worked on it and resumed there (`claude --resume <session-id>`).
+Create each one with this header:
+
+```markdown
+| File | Session ID | Date | Event | Notes |
+|---|---|---|---|---|
+```
+
+Whenever a file is created in, or moved between, that folder's subfolders, append a row: the file name,
+the session ID read from `$CLAUDE_CODE_SESSION_ID` (never guessed), the date, the event (`created in
+<subfolder>`, e.g. `WIP` or `tomes/active`, `created` for the flat `client-communication/`, or
+`moved <from> → <to>`), and a short note (for example the verdict, or what the client was
+asked). Never delete rows; a file's rows are its history. The `original-findings/` mirror is not
+logged: `/findings-sync` writes it, not a research session.
+
+**Client communication.** One file per finding, `client-communication/<finding-ID>.md`, holds every
+question asked to the client about that finding and its answer. Questions are numbered in the order
+asked and never rewritten; a follow-up is a new question. Create the file with the first question:
+
+```markdown
+# <finding-ID> — <finding title>
+
+## Q1 — <YYYY-MM-DD>
+**Question:** <what was asked>
+**Answer (<YYYY-MM-DD>):** <the client's answer, or `pending`>
+**Outcome:** <what the answer changed: verdict, severity, scope, next step>
 ```
 
 Documents in `grimoire/tomes/` are cross-linked from GRIMOIRE.md using Obsidian-style wiki links:

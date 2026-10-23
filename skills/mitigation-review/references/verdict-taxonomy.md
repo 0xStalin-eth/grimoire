@@ -24,12 +24,12 @@ Rate residuals independently of the original finding, using the realism question
 
 ## Status line for GRIMOIRE.md
 
-`**<Verdict>** (<≤12-word reason>) — [[findings/<ID>-mitigation-review]]`
+`**<Verdict>** (<≤12-word reason>) — [[mitigation-review/WIP/<ID>-mitigation-review]]`
 
-Once the review is closed and its file moved (SKILL.md B7), the link becomes
-`[[findings/done/<ID>-mitigation-review]]`.
+When the file moves (SKILL.md B7), the link follows it: `[[mitigation-review/PENDINGS/…]]`,
+`[[mitigation-review/done/…]]` or `[[mitigation-review/archived/…]]`.
 
 Examples:
-- `**Fixed** (untracked priority entries skipped) — [[findings/L-5-mitigation-review]]`
-- `**Partially fixed** (1-day setter floor; zero deploy default still steps NAV) — [[findings/L-6-mitigation-review]]`
-- `**Acknowledged** (docs; fail-closed by design) — [[findings/L-2-mitigation-review]]`
+- `**Fixed** (untracked priority entries skipped) — [[mitigation-review/done/L-5-mitigation-review]]`
+- `**Partially fixed** (1-day setter floor; zero deploy default still steps NAV) — [[mitigation-review/PENDINGS/L-6-mitigation-review]]`
+- `**Acknowledged** (docs; fail-closed by design) — [[mitigation-review/done/L-2-mitigation-review]]`

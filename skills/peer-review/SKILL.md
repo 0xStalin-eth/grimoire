@@ -82,6 +82,9 @@ Create a todo list from these steps. Steps marked **[confirm]** pause for the us
 
 ### 1. Load the finding and its context
 
+If the mirror is missing or holds no `issue<N>-*.md` files, pull the findings repo with
+`/findings-sync` first, so duplicates and citing findings can be checked locally.
+
 ```bash
 bash <skill>/scripts/load-finding.sh <N> --mirror <mirror-dir> [--repo <owner/repo>]
 ```

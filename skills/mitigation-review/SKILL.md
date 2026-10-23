@@ -71,9 +71,11 @@ and the report file exists. Note fork-test env vars the repo uses (`grep -r "vm.
 
 **Findings mirror: always a fresh pull.** Peer review and mitigation review happen in different
 workspaces, and each one keeps its own mirror. Never copy the mirror from the audit or peer-review
-checkout. Pull it from GitHub with `/findings-sync` into `grimoire/findings/original-repo-findings`
-(`findings_sync.py --repo <owner/repo> --mirror <mirror> pull --new`). If this checkout already has a
-mirror, run `status` and `pull --new` for any issues it is missing.
+checkout. If this checkout has no `grimoire/` tree yet, create it first with the layout from
+`/summon` Step 2 (never overwriting existing folders or files). Then pull with `/findings-sync` into
+this checkout's `grimoire/findings/original-findings`
+(`findings_sync.py --repo <owner/repo> --mirror grimoire/findings/original-findings pull --new`). If
+this checkout already has a mirror, run `status` and `pull --new` for any issues it is missing.
 
 ### A2. Build the index
 
@@ -109,7 +111,7 @@ Add a `### Finding → mitigation status` table to GRIMOIRE.md (`| Finding | PR 
 - [ ] B4. Decide the verdict
 - [ ] B5. Record (review file + GRIMOIRE status)
 - [ ] B6. Present + Cyfrin write-up
-- [ ] B7. Close (when the user closes the review): move the review file to `done/`
+- [ ] B7. Move the review file (`PENDINGS/` when waiting on the client, `done/` when closed)
 ```
 
 ### B0. Refresh
@@ -207,7 +209,8 @@ reasoning; if the user disagrees, downgrade it.
 
 ### B5. Record
 
-- Write `grimoire/findings/<ID>-mitigation-review.md` from `examples/mitigation-review-template.md`.
+- Write `grimoire/mitigation-review/WIP/<ID>-mitigation-review.md` from
+  `examples/mitigation-review-template.md`. Every new review file starts in `WIP/`.
   Include the PoC table, the run command, the thread context, and the final write-up.
 - Update the finding's row in the GRIMOIRE.md status table (format in `verdict-taxonomy.md`).
 - Don't edit the report file unless the user asks.
@@ -241,13 +244,35 @@ on a new version.
 
 ### B7. Close
 
-When the user closes a finding's review, move its review file into the `done/` subfolder:
-`grimoire/findings/<ID>-mitigation-review.md` → `grimoire/findings/done/<ID>-mitigation-review.md`
-(create `done/` if missing). Update that finding's GRIMOIRE.md status link to
-`[[findings/done/<ID>-mitigation-review]]`, and any other link to the file (`grep -rl
-"<ID>-mitigation-review" grimoire/ GRIMOIRE.md`). Don't move a review the user hasn't closed: a
-**Partially fixed** or pending-client review stays in `findings/` until the user says it is closed.
-Only then remove this session's isolated copies for the finding (`isolated-workspace.sh remove <name>`).
+Review files live in `grimoire/mitigation-review/` and move between its subfolders (create any that
+are missing) only when the user says so:
+
+| Folder | When the file goes there |
+|---|---|
+| `WIP/` | Every new review (B5), and a review taken back up from `PENDINGS/` once the client answers |
+| `PENDINGS/` | The user moves on from a **Partially fixed** or **Not fixed** review, waiting on the client's answers |
+| `done/` | The user closes the review |
+| `archived/` | The review is discarded or invalidated |
+
+On every move, update that finding's GRIMOIRE.md status link to
+`[[mitigation-review/<folder>/<ID>-mitigation-review]]`, and any other link to the file (`grep -rl
+"<ID>-mitigation-review" grimoire/ GRIMOIRE.md`). Only when the file reaches `done/` or `archived/`,
+remove this session's isolated copies for the finding (`isolated-workspace.sh remove <name>`); a
+review in `PENDINGS/` keeps them for when it resumes.
+
+**Session log.** Every time a review file is created (B5) or moved between these folders, append a
+row to `grimoire/mitigation-review/SESSIONS.md` (create it with the header from `/summon` Step 2 if
+missing), so the review can be resumed in the session that holds its context and isolated copies
+(`claude --resume <session-id>`):
+
+```markdown
+| <ID>-mitigation-review.md | <$CLAUDE_CODE_SESSION_ID> | <YYYY-MM-DD> | moved WIP → PENDINGS | Partially fixed; asked the client Q2 in [[client-communication/<ID>]] |
+```
+
+Read the session ID from `$CLAUDE_CODE_SESSION_ID`; never guess it. Never delete rows. For a move
+into `PENDINGS/`, first add the questions to `grimoire/client-communication/<ID>.md` (format in
+`/summon` Step 2) with the answer `pending`, and point the note at them. When the client answers,
+fill in the answer and outcome there before taking the review back to `WIP/`.
 
 ---
 
