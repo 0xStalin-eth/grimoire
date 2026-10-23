@@ -37,4 +37,5 @@ Core
 Workflows are skills that structure how you approach a goal.
 
 * tome - Tomes are an incremental research wiki with extensive evidence provenance. Use it whenever a user asks a question, the tome skill provides a structured method for answering questions.
-* delve - Review autonomous research for interesting odd behavior, near-misses, and promising leads that deserve deeper human-guided investigation.
+* delve - Surface odd behavior, near-misses, and leads from completed autonomous research to the operator. A report for humans, not a way for agents to pick their next task.
+* dig-mode - Short question, short answer. Lets the operator build context on a system or on prior research with low cognitive load. Often follows delve.

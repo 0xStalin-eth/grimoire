@@ -2,24 +2,49 @@
 name: delve
 description: >-
   This skill should be used when the user says "delve", "/delve", "review the
-  research", "what was interesting", "surface odd behavior", "find promising
-  leads", "what should I dig into", "go deeper on this lead", or wants to turn
-  autonomous security research output into prioritized interesting behaviors and
-  deeper research directions. Delve does not report findings by itself; it
-  identifies substantiated oddities, near-misses, unresolved mechanisms, and
-  suspicious patterns that may be close to real vulnerabilities.
+  research", "what was interesting", "surface odd behavior", "what did the agents
+  find odd", "show me the leads", or wants to see what autonomous security research
+  turned up that deserves a human look. Delve is a report for the operator. It
+  surfaces substantiated oddities, near-misses, unresolved mechanisms, and
+  suspicious patterns so the operator can decide what to explore. It does not pick
+  research directions, and it is not for agents to choose their next task.
 user_invocable: true
 ---
 
 # Delve
 
-Review security research work and surface interesting behavior worth deeper human
-attention.
+Review completed security research and surface interesting behavior to the operator.
 
-`delve` is for the space between "no finding yet" and "this is probably nothing."
-Good agents should only report substantiated findings, but while hunting they often
-encounter odd behavior, sharp edges, mismatched assumptions, and almost-bugs. Delve
-preserves and ranks those leads so a Grimoire user can choose one and dive deep.
+## Who Delve Is For
+
+Delve is for a human operator. It is not a planning step for autonomous research.
+
+When an operator runs research manually, they learn the system as they go. They
+notice what is odd, what almost broke, and what nobody could explain. When agents
+do the research, that learning is lost. Delve recovers it. It collects the odd
+behavior the agents saw and gives it back to the operator in a form they can absorb.
+
+The operator then applies their own intuition and research taste. Bugs are often
+found near delve topics, but the operator chooses which topic, and how deep.
+
+The usual sequence:
+1. Set up autonomous research and let it run.
+2. Run `/delve` to see what was interesting.
+3. Use `/dig-mode` to learn how the interesting behaviors fit together.
+
+If you are an agent doing autonomous research and you reached this skill while
+looking for your next task, stop. Delve does not answer that question. Use your
+own research plan.
+
+## What Delve Does Not Do
+
+- It does not promote leads to findings.
+- It does not recommend which lead to pursue.
+- It does not start the investigation of a lead.
+- It does not route leads to other skills.
+- It does not plan or steer research.
+
+Delve ends when the board is presented. What happens next is the operator's call.
 
 ## Philosophy
 
@@ -27,14 +52,10 @@ Interesting behavior is not a vulnerability. It is a signal that the system has
 complexity, tension, or unexplained constraints near a security boundary.
 
 Delve should be curious but disciplined:
-- Do not promote leads to findings.
 - Do not bury strange behavior just because it is not yet exploitable.
 - Prefer concrete observed behavior over vibes.
 - Preserve why the behavior caught attention.
-- Define what evidence would confirm or refute the lead.
-
-The user is the selector. Delve presents the menu of promising directions, then helps
-go deep on the chosen topic.
+- Preserve what the agents did and did not verify.
 
 ## What Counts As Interesting
 
@@ -63,8 +84,6 @@ in_progress before starting it and completed when done.
 - [ ] 3. Separate findings, leads, dead ends, and notes
 - [ ] 4. Rank leads by security promise
 - [ ] 5. Present the delve board
-- [ ] 6. Dive into the selected lead
-- [ ] 7. Route the outcome
 ```
 
 ### 1. Gather Research Artifacts
@@ -101,12 +120,12 @@ instead of vulnerability language.
 
 Classify each item:
 
-| Class | Meaning | Route |
-|-------|---------|-------|
-| Finding | Substantiated vulnerability or control failure | `/finding-draft` or existing finding workflow |
+| Class | Meaning | Where it goes |
+|-------|---------|---------------|
+| Finding | Substantiated vulnerability or control failure | Listed under Guardrails, not on the board |
 | Lead | Interesting behavior with plausible security relevance but insufficient proof | Delve board |
-| Dead end | Checked path with evidence it is not exploitable | Tome note if useful |
-| Note | Durable context without a clear attack direction | `/tome` |
+| Dead end | Checked path with evidence it is not exploitable | Listed under Guardrails, not on the board |
+| Note | Durable context without a clear attack direction | Mentioned only if it explains a lead |
 
 Do not dilute the delve board with confirmed findings or already-closed dead ends.
 
@@ -121,9 +140,9 @@ Rank each lead on four axes:
 | Evidence quality | High, Medium, Low | How concrete the current observation is |
 | Next-step clarity | High, Medium, Low | Whether there is an obvious check to confirm or refute it |
 
-Prioritize leads with high impact proximity and clear next steps, even when weirdness
-is only medium. A boring-looking edge near money or authority often beats a fascinating
-edge in harmless code.
+Ranking orders the board. It is not a recommendation. A boring-looking edge near
+money or authority often ranks above a fascinating edge in harmless code, but the
+operator may disagree, and that is the point.
 
 ### 5. Present The Delve Board
 
@@ -132,47 +151,18 @@ Present 3-7 leads unless fewer exist. Use this format:
 ```markdown
 ## Delve Board
 
-| Lead | Why it matters | Evidence | Missing proof | Next check | Priority |
+| Lead | Why it matters | Evidence | Missing proof | Open check | Priority |
 |------|----------------|----------|---------------|------------|----------|
-| [short name] | [asset/invariant/boundary] | [paths or observations] | [gap] | [specific check] | [High/Med/Low] |
+| [short name] | [asset/invariant/boundary] | [paths or observations] | [gap] | [what would confirm or refute] | [High/Med/Low] |
 ```
 
-Then recommend the top 1-2 leads to dive into and explain why.
+Where leads touch the same mechanism, asset, or actor, say so in one line. The
+operator uses this to see the shape of the system, not to pick a lead.
 
 If no good leads exist, say so directly and summarize the strongest dead ends or notes.
 
-### 6. Dive Into The Selected Lead
-
-When the user picks a lead, turn it into a focused research question:
-
-```markdown
-If [capability or condition], can [mechanism] violate [asset or invariant], or is it
-fully prevented by [specific control]?
-```
-
-Then:
-- Read the relevant code and tests.
-- Search for related flows, callers, callees, and state transitions.
-- Check existing tomes and cartography.
-- Identify the shortest experiment, proof, or source review that can confirm/refute.
-- Track evidence for and against the lead.
-
-Use `/divine` when the lead depends on understanding why a mechanism exists.
-Use `/tome` when the lead produces durable context, negative results, or unresolved
-questions.
-
-### 7. Route The Outcome
-
-End each delve with one route:
-
-| Outcome | Action |
-|---------|--------|
-| Verified vulnerability | Draft a finding with `/finding-draft` |
-| Needs exploit proof | Use `/write-poc` or define the minimal experiment |
-| Needs broader search | Spawn a focused sigil or variant analysis |
-| Useful context, not a bug | Write or update a tome |
-| Still interesting but unverified | Add to `grimoire/tomes/notes/hypotheses.md` or `open-questions/` |
-| Disproven | Record the negative result if it prevents repeated work |
+Then stop. Do not recommend a lead. Do not offer to investigate. Do not ask which
+lead the operator wants.
 
 ## Output Format
 
@@ -183,13 +173,13 @@ End each delve with one route:
 
 ## Delve Board
 
-| Lead | Why it matters | Evidence | Missing proof | Next check | Priority |
+| Lead | Why it matters | Evidence | Missing proof | Open check | Priority |
 |------|----------------|----------|---------------|------------|----------|
-| [short name] | [security relevance] | [source-backed observation] | [gap] | [specific action] | [High/Med/Low] |
+| [short name] | [security relevance] | [source-backed observation] | [gap] | [what would confirm or refute] | [High/Med/Low] |
 
-## Recommended Dive
+## Connections
 
-[The 1-2 leads most worth human attention, with rationale.]
+- [Leads that share a mechanism, asset, or actor, one line each. Omit if none.]
 
 ## Guardrails
 
@@ -200,9 +190,9 @@ End each delve with one route:
 
 ## Key Principles
 
+- Delve reports to a human. It does not steer agents.
 - Leads are not findings.
 - Every lead needs a concrete observation.
 - The best leads are near assets, invariants, trust boundaries, or privileged actions.
 - Odd behavior deserves preservation even when it is not yet exploitable.
-- Negative results are useful when they stop future agents from walking the same path.
-- The user chooses where to dive; Delve makes that choice informed.
+- The operator chooses where to go next. Delve makes that choice informed, then stops.
