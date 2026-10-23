@@ -91,7 +91,7 @@ GRIMOIRE.md
 
 ---
 
-## Stage 1: Initialize a New Codebase
+## Stage 1: Initialize a New Codebase (automatic — you confirm the layout and scope)
 
 ### `/summon`
 
@@ -109,7 +109,7 @@ Run this first on any new codebase. It creates your `GRIMOIRE.md` — the living
 
 ---
 
-## Stage 2: Map Code Flows
+## Stage 2: Map Code Flows (automatic)
 
 ### `/cartography`
 
@@ -130,7 +130,7 @@ When you accumulate many flows, this detects overlaps (>40% component overlap tr
 
 ---
 
-## Stage 3: Discover Leads
+## Stage 3: Discover Leads (both — agents hunt and delve, you add your own hypotheses and dig)
 
 ### `/annotation`
 
@@ -171,7 +171,7 @@ A question-and-answer mode for building context fast: you ask short questions, i
 
 ---
 
-## Stage 4: Validate Hypotheses
+## Stage 4: Validate Hypotheses (automatic — you confirm the verdict and the filing)
 
 ### `/validate-hypothesis`
 
@@ -189,7 +189,7 @@ Every check is written to the hypothesis's `## Notes` as it happens, so an unfin
 
 ---
 
-## Stage 5: Document Findings
+## Stage 5: Document Findings (both — drafting is automatic, polishing and submitting are manual)
 
 ### `/finding-draft`
 
@@ -218,7 +218,7 @@ Before you submit, ask the hag to red-team the finding from a bug-bounty host's 
 
 ---
 
-## Stage 6: Write Proof-of-Concept
+## Stage 6: Write Proof-of-Concept (automatic)
 
 ### `/write-poc`
 
@@ -239,7 +239,7 @@ Integrates with `forge-poc-templates` (Immunefi's Solidity PoC library, included
 
 ---
 
-## Stage 7: Review Others' Findings and the Client's Fixes
+## Stage 7: Review Others' Findings and the Client's Fixes (automatic — you confirm verdicts and file moves)
 
 ### `/findings-sync`
 
@@ -263,7 +263,7 @@ Files: `mitigation-review/WIP/` → `done/` when closed, `archived/` when discar
 
 ---
 
-## Stage 8: Build Your Detection Library
+## Stage 8: Build Your Detection Library (automatic)
 
 ### `/scribe-distill`
 
