@@ -167,7 +167,8 @@ project/
         tomes/                  # documentation, detailed notes, learnings
             SESSIONS.md
             active/
-            archived/
+            archived/           # record of old work only; outdated, likely invalid, never read
+        delves/                 # one <session-id>/ per /delve run (board.md, leads/); for /dig-mode
         client-communication/   # conversations with the client: one <finding-ID>.md per finding
             SESSIONS.md
         report-deliverables/
@@ -196,6 +197,25 @@ the session ID read from `$CLAUDE_CODE_SESSION_ID` (never guessed), the date, th
 `moved <from> → <to>`), and a short note (for example the verdict, or what the client was
 asked). Never delete rows; a file's rows are its history. The `original-findings/` mirror is not
 logged: `/findings-sync` writes it, not a research session.
+
+**Hypothesis files.** Every `hypotheses/` file uses this format, wherever it was created (by hand or
+by `/delve`), so a lead's outcome can always be read from the file and its folder:
+
+```markdown
+---
+source: <delves/<session-id>/leads/<lead>.md, one per line, or `manual`>
+outcome: <empty in WIP/ | promoted: findings/WIP/<file>.md | invalid: <why> | expected behavior: <why>>
+---
+# <hypothesis title>
+
+<the behavior, where it appears (`path:line`), why it may matter, what would confirm or refute it>
+
+## Notes
+<work log: what was checked, with dates>
+```
+
+Moving a file out of `WIP/` sets `outcome:`. Both `invalid` (the attack does not work) and
+`expected behavior` (it works as designed) go to `invalid/`.
 
 **Client communication.** One file per finding, `client-communication/<finding-ID>.md`, holds every
 question asked to the client about that finding and its answer. Questions are numbered in the order

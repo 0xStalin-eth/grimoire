@@ -44,6 +44,10 @@ own research plan.
 - It does not route leads to other skills.
 - It does not plan or steer research.
 
+Delve does record every lead it surfaces as a hypothesis in `grimoire/hypotheses/WIP/` (step 5).
+That is bookkeeping, not investigation: it keeps delves and hypotheses in sync so a lead is never
+lost and never surfaced twice.
+
 Delve ends when the board is presented. What happens next is the operator's call.
 
 ## Philosophy
@@ -83,15 +87,18 @@ in_progress before starting it and completed when done.
 - [ ] 2. Extract interesting behaviors
 - [ ] 3. Separate findings, leads, dead ends, and notes
 - [ ] 4. Rank leads by security promise
-- [ ] 5. Present the delve board
+- [ ] 5. Save the delve to this session's folder
+- [ ] 6. Present the delve board
 ```
 
 ### 1. Gather Research Artifacts
 
 Read `GRIMOIRE.md` if it exists. Then inspect relevant research output:
 - Current conversation or agent transcript, if available
-- `grimoire/tomes/`
-- `grimoire/findings/`
+- `grimoire/tomes/active/` (never `tomes/archived/`: outdated, likely invalid conclusions)
+- `grimoire/findings/` — `WIP/`, `valid/`, and `invalid/` (rejected findings are dead ends)
+- `grimoire/hypotheses/` — `WIP/` are open leads, `invalid/` are dead ends, `valid/` were promoted
+  (each file's `source:` names the delve lead it came from, if any)
 - `grimoire/sigil-findings/`
 - `grimoire/cartography/`
 - `grimoire/spells/`
@@ -127,6 +134,15 @@ Classify each item:
 | Dead end | Checked path with evidence it is not exploitable | Listed under Guardrails, not on the board |
 | Note | Durable context without a clear attack direction | Mentioned only if it explains a lead |
 
+Before classifying a candidate, check whether it is already a hypothesis: the same mechanism at the
+same `path:line`, whatever its name. Its folder decides the class:
+
+| Hypothesis in | Class | On the board |
+|---|---|---|
+| `hypotheses/WIP/` | Lead | Yes, with its hypothesis file; say what is new since it was recorded, if anything |
+| `hypotheses/valid/` | Finding | No; Guardrails, with the finding it was promoted to |
+| `hypotheses/invalid/` | Dead end | No; Guardrails, with its outcome (`invalid` or `expected behavior`) and why |
+
 Do not dilute the delve board with confirmed findings or already-closed dead ends.
 
 ### 4. Rank Leads By Security Promise
@@ -144,16 +160,55 @@ Ranking orders the board. It is not a recommendation. A boring-looking edge near
 money or authority often ranks above a fascinating edge in harmless code, but the
 operator may disagree, and that is the point.
 
-### 5. Present The Delve Board
+### 5. Save The Delve
+
+Write the delve to this session's own folder, `grimoire/delves/<session-id>/`, where `<session-id>`
+is `$CLAUDE_CODE_SESSION_ID`. If it is unset, ask the user for a folder name; never guess one. Each
+session writes only to its own folder, so delves run in parallel never collide. Never write to, or
+edit, another session's folder.
+
+```text
+grimoire/delves/<session-id>/
+    board.md            the Output Format below, under a header (see next)
+    leads/<lead>.md     one per lead on the board: everything captured in step 2
+```
+
+`board.md` opens with a header, so a later session knows what the board is built on:
+
+```markdown
+# Delve — <YYYY-MM-DD HH:MM>
+Session: <session-id> (`claude --resume <session-id>`)
+Commits: <in-scope repo> @ <short sha>, one per repo (`git -C <repo> rev-parse --short HEAD`)
+```
+
+Each `leads/<lead>.md` must make sense without this conversation. Give evidence as `path:line` and
+concrete observations. When evidence comes from a transcript that is not saved anywhere, quote the
+relevant lines into the lead file; "the agent said" alone is lost when the session ends.
+
+Running delve again in the same session updates the files in this folder to the new board.
+
+**Sync with hypotheses.** For each lead on the board:
+- **No hypothesis yet:** create `grimoire/hypotheses/WIP/<lead>.md` in the hypothesis format from
+  `/summon` Step 2, with `source: delves/<session-id>/leads/<lead>.md`, and append a row to
+  `grimoire/hypotheses/SESSIONS.md` (`created in WIP`, note `from delve <session-id>`). If the
+  name is taken by a different hypothesis, add a short suffix.
+- **Already a hypothesis in `WIP/`:** don't create another. Add this lead file to its `source:` list.
+
+Every lead file names its hypothesis file on its first line (`Hypothesis: <name>.md`). The lead's
+status is wherever that file is now (`ls grimoire/hypotheses/*/<name>.md`); never copy the status into
+the delve, so the two cannot drift. Delve only creates hypotheses and adds sources; it never moves,
+edits, or closes one.
+
+### 6. Present The Delve Board
 
 Present 3-7 leads unless fewer exist. Use this format:
 
 ```markdown
 ## Delve Board
 
-| Lead | Why it matters | Evidence | Missing proof | Open check | Priority |
-|------|----------------|----------|---------------|------------|----------|
-| [short name] | [asset/invariant/boundary] | [paths or observations] | [gap] | [what would confirm or refute] | [High/Med/Low] |
+| Lead | Why it matters | Evidence | Missing proof | Open check | Priority | Hypothesis |
+|------|----------------|----------|---------------|------------|----------|------------|
+| [short name] | [asset/invariant/boundary] | [paths or observations] | [gap] | [what would confirm or refute] | [High/Med/Low] | [`<name>.md`, new or existing] |
 ```
 
 Where leads touch the same mechanism, asset, or actor, say so in one line. The
@@ -161,7 +216,7 @@ operator uses this to see the shape of the system, not to pick a lead.
 
 If no good leads exist, say so directly and summarize the strongest dead ends or notes.
 
-Then stop. Do not recommend a lead. Do not offer to investigate. Do not ask which
+End with one line naming the session folder. Then stop. Do not recommend a lead. Do not offer to investigate. Do not ask which
 lead the operator wants.
 
 ## Output Format
@@ -173,9 +228,9 @@ lead the operator wants.
 
 ## Delve Board
 
-| Lead | Why it matters | Evidence | Missing proof | Open check | Priority |
-|------|----------------|----------|---------------|------------|----------|
-| [short name] | [security relevance] | [source-backed observation] | [gap] | [what would confirm or refute] | [High/Med/Low] |
+| Lead | Why it matters | Evidence | Missing proof | Open check | Priority | Hypothesis |
+|------|----------------|----------|---------------|------------|----------|------------|
+| [short name] | [security relevance] | [source-backed observation] | [gap] | [what would confirm or refute] | [High/Med/Low] | [`<name>.md`] |
 
 ## Connections
 
@@ -183,8 +238,8 @@ lead the operator wants.
 
 ## Guardrails
 
-- Findings already substantiated: [list or "none"]
-- Dead ends not worth re-opening: [list or "none"]
+- Findings already substantiated: [list or "none"; for promoted hypotheses, the finding file]
+- Dead ends not worth re-opening: [list or "none"; for hypotheses in `invalid/`, the outcome and why]
 - Claims that remain unverified: [list]
 ```
 
