@@ -66,6 +66,17 @@ Read before answering, in this order:
 - `grimoire/cartography/` for flows
 - The code itself
 
+When a question touches past work, also read the record of it, and only then:
+
+| Question is about | Read | Mark the answer |
+|---|---|---|
+| Whether something was already checked, or a hypothesis in progress | `grimoire/hypotheses/` (its `## Notes`; `outcome:` in `valid/` and `invalid/`) | "From the hypothesis notes:" |
+| What is already proven or submitted | `grimoire/findings/` (`WIP/`, `valid/`, `invalid/`, and the `original-findings/` mirror) | "From the finding:" |
+| What the client said | `grimoire/client-communication/<finding-ID>.md` | "From the client, <date>:" |
+| A review's verdict | `grimoire/peer-review/`, `grimoire/mitigation-review/` | "From the review:" |
+
+Where a record and the code disagree, give both in one line each; the code may have changed since.
+
 Use `/tome` or `/divine` only when the user asks a question those skills are built
 for, and say so in one line before switching.
 

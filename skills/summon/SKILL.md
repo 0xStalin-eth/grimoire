@@ -217,6 +217,19 @@ outcome: <empty in WIP/ | promoted: findings/WIP/<file>.md | invalid: <why> | ex
 Moving a file out of `WIP/` sets `outcome:`. Both `invalid` (the attack does not work) and
 `expected behavior` (it works as designed) go to `invalid/`.
 
+**Findings and hypotheses stay in sync.** A finding promoted from a hypothesis carries a
+`hypothesis:` link in its front matter, and the hypothesis's `outcome:` points back at the finding.
+Whenever such a finding moves between `valid/` and `invalid/`, move its hypothesis the same way in
+the same step:
+- **Finding rejected** (`findings/valid/` or `WIP/` → `findings/invalid/`): move the hypothesis
+  `valid/` → `invalid/`, set `outcome: invalid: finding rejected — <why>`, and add a dated line to its
+  `## Notes` saying which finding it was promoted to and why that finding was rejected.
+- **Finding reinstated** (`findings/invalid/` → `valid/` or `WIP/`): move the hypothesis back to
+  `valid/` and restore `outcome: promoted: <finding path>`, with a dated note.
+
+Update the links in both files to the new paths, and append a row to both `SESSIONS.md` logs. A
+finding with no `hypothesis:` link moves alone.
+
 **Client communication.** One file per finding, `client-communication/<finding-ID>.md`, holds every
 question asked to the client about that finding and its answer. Questions are numbered in the order
 asked and never rewritten; a follow-up is a new question. Create the file with the first question:

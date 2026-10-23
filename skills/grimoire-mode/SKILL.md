@@ -39,3 +39,4 @@ Workflows are skills that structure how you approach a goal.
 * tome - Tomes are an incremental research wiki with extensive evidence provenance. Use it whenever a user asks a question, the tome skill provides a structured method for answering questions.
 * delve - Surface odd behavior, near-misses, and leads from completed autonomous research to the operator. A report for humans, not a way for agents to pick their next task.
 * dig-mode - Short question, short answer. Lets the operator build context on a system or on prior research with low cognitive load. Often follows delve.
+* validate-hypothesis - Settle one hypothesis: explore, prove or disprove with a PoC, then promote it to a finding draft or close it as invalid or expected behavior.
