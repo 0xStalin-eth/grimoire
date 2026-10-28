@@ -45,6 +45,18 @@ If GRIMOIRE.md doesn't exist, run `/summon` first. The peer-review skill's `scri
 below (`isolated-workspace.sh`, `verify-fix.sh`); its `references/severity-calibration.md` and
 `references/parallel-sessions.md` apply here too.
 
+## Parallel Sessions
+
+Several sessions can validate different hypotheses in the same workspace at once. On top of the
+peer-review rules above:
+- **One session per hypothesis.** A session works only on a hypothesis it has claimed (step 1).
+- **Status rows go through the script.** `hypotheses/SESSIONS.md` is a snapshot, one row per
+  hypothesis with its current state. Write it only with the summon skill's
+  `scripts/session-status.sh`, which replaces the row under a lock, so concurrent updates are never
+  lost. `findings/SESSIONS.md` is a history log: add rows with a shell append (`>>`) only.
+- **Never overwrite on create.** Before writing a new hypothesis, finding draft or PoC, check the name
+  is free (`set -o noclobber` or `[ ! -e <file> ]`). On a clash, add a short suffix.
+
 ---
 
 ## Workflow
@@ -65,7 +77,15 @@ Create a todo list from these steps. Steps marked **[confirm]** pause for the us
 
 Read the hypothesis file and every lead in its `source:`. If the user gave an idea instead of a file,
 create `grimoire/hypotheses/WIP/<name>.md` in the `/summon` format (`source: manual`) and append a
-`created in WIP` row to `grimoire/hypotheses/SESSIONS.md` (session ID from `$CLAUDE_CODE_SESSION_ID`).
+row for it to `grimoire/hypotheses/SESSIONS.md` 
+(`session-status.sh … <name>.md WIP "created, manual"`).
+
+**Claim it.** If `claimed-by:` is empty, set it to this session's ID and update its row in
+`grimoire/hypotheses/SESSIONS.md` (`session-status.sh … <name>.md WIP "claimed, validating"`). Re-read the file right after: if another ID won, back off. If it
+already names another session, stop: tell the user which session holds it (`claude --resume
+<session-id>`), and continue only if they explicitly take it over (note `taken over from <id>`
+in its row).
+A resumed session keeps its ID, so it finds its own claim.
 
 Restate the hypothesis as one testable sentence: who does what, through which path, and what breaks.
 
@@ -95,8 +115,11 @@ client* (then draft the question for `client-communication/`; don't send it).
 
 ### 4. Prove it
 
-Use `/write-poc` to write the smallest test that shows the claim, in the project's PoC directory.
-Prefer the hypothesis's own scenario on the full stack, reusing existing fixtures. Record the exact
+Use `/write-poc` to write the smallest test that shows the claim. Name it after the hypothesis
+(`Hyp<Name>.t.sol`, or the project's equivalent) so parallel sessions never pick the same file. Draft
+it in this session's work folder (`$P/isolated-workspace.sh work hyp-<name>`) and move it into the
+project's PoC directory only once it compiles: a broken file in the shared PoC folder breaks every
+other session's build. Prefer the hypothesis's own scenario on the full stack, reusing existing fixtures. Record the exact
 figures the test logs. When a code change is needed to probe the behavior, make it only in this
 session's isolated copy (`$P/isolated-workspace.sh`), never in the workspace.
 
@@ -131,7 +154,8 @@ another session.
 ### 7. File the outcome [confirm]
 
 On the user's confirmation (they may question the filing with `/dig-mode` first), finish the
-hypothesis file's `## Notes` with the verdict, then:
+hypothesis file's `## Notes` with the verdict and clear `claimed-by:` (an Inconclusive hypothesis keeps
+it only if this session will resume it), then:
 
 | Verdict | Hypothesis file | Also |
 |---|---|---|
@@ -140,8 +164,9 @@ hypothesis file's `## Notes` with the verdict, then:
 | **Expected behavior** | Move to `hypotheses/invalid/`, `outcome: expected behavior: <why>` | |
 | **Inconclusive** | Stays in `WIP/` | Notes say what is missing; if it waits on the client, add the question to `grimoire/client-communication/<name>.md` |
 
-Append a row to `grimoire/hypotheses/SESSIONS.md` for every move (`moved WIP → valid`, with the verdict
-as the note), and a `created in WIP` row to `grimoire/findings/SESSIONS.md` for a new draft.
+Update the hypothesis's row in `grimoire/hypotheses/SESSIONS.md` to its new folder, with the verdict
+as the note (`session-status.sh … <name>.md valid "Valid; promoted to findings/WIP/<name>.md"`), and
+append a `created in WIP` row to `grimoire/findings/SESSIONS.md` for a new draft.
 
 From here on, the finding and the hypothesis move together: if the finding is later rejected, its
 hypothesis goes back to `invalid/` (rule in `/summon` Step 2, "Findings and hypotheses stay in sync").

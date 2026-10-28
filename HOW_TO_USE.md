@@ -83,7 +83,9 @@ GRIMOIRE.md
 
 **File lifecycle.** Every new file lands in `WIP/`. It moves to `valid/` or `done/` when it is valid or submitted, and to `invalid/` or `archived/` when it is discarded, closed or invalidated. A mitigation review waiting on the client goes to `PENDINGS/` and comes back to `WIP/` when the client answers.
 
-**Session logs.** Each top-level folder has a `SESSIONS.md`. Every time a file is created or moved, a row records the file, the Claude Code session ID, the date and the event. To pick up old work where it was left, find the row and run `claude --resume <session-id>`.
+**Session logs.** Each top-level folder has a `SESSIONS.md`, so you can pick up old work where it was left: find the file's row and run `claude --resume <session-id>`.
+- In `hypotheses/`, `peer-review/` and `mitigation-review/` it is a **status snapshot**: one row per file with its current folder, the last session that worked on it, the date and a note. Every update replaces the row.
+- In `findings/`, `tomes/` and `client-communication/` it is a **history log**: every create or move adds a row, and rows are never deleted.
 
 **Hypotheses ⇄ findings ⇄ delves stay in sync.** A hypothesis file records where it came from (`source:`) and how it ended (`outcome:`). A promoted finding links back to its hypothesis. If the finding is rejected later, the hypothesis moves to `invalid/` too. Delve never stores a lead's status itself; it reads it from the hypothesis's folder.
 

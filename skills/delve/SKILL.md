@@ -189,8 +189,9 @@ Running delve again in the same session updates the files in this folder to the 
 
 **Sync with hypotheses.** For each lead on the board:
 - **No hypothesis yet:** create `grimoire/hypotheses/WIP/<lead>.md` in the hypothesis format from
-  `/summon` Step 2, with `source: delves/<session-id>/leads/<lead>.md`, and append a row to
-  `grimoire/hypotheses/SESSIONS.md` (`created in WIP`, note `from delve <session-id>`). If the
+  `/summon` Step 2, with `source: delves/<session-id>/leads/<lead>.md`, and add its row to
+  `grimoire/hypotheses/SESSIONS.md` with the summon skill's script
+  (`session-status.sh grimoire/hypotheses/SESSIONS.md <lead>.md WIP "from delve <session-id>"`). If the
   name is taken by a different hypothesis, add a short suffix.
 - **Already a hypothesis in `WIP/`:** don't create another. Add this lead file to its `source:` list.
 

@@ -260,17 +260,20 @@ On every move, update that finding's GRIMOIRE.md status link to
 remove this session's isolated copies for the finding (`isolated-workspace.sh remove <name>`); a
 review in `PENDINGS/` keeps them for when it resumes.
 
-**Session log.** Every time a review file is created (B5) or moved between these folders, append a
-row to `grimoire/mitigation-review/SESSIONS.md` (create it with the header from `/summon` Step 2 if
-missing), so the review can be resumed in the session that holds its context and isolated copies
-(`claude --resume <session-id>`):
+**Session status.** `grimoire/mitigation-review/SESSIONS.md` is a snapshot of where every review
+stands now: one row per review, never a history. Every time a review file is created (B5) or moved
+between these folders, replace its row with the summon skill's script, so the review can be resumed
+in the last session that worked on it, which holds its context and isolated copies (`claude --resume
+<session-id>`):
 
-```markdown
-| <ID>-mitigation-review.md | <$CLAUDE_CODE_SESSION_ID> | <YYYY-MM-DD> | moved WIP → PENDINGS | Partially fixed; asked the client Q2 in [[client-communication/<ID>]] |
+```bash
+<summon>/scripts/session-status.sh grimoire/mitigation-review/SESSIONS.md <ID>-mitigation-review.md \
+  PENDINGS "Partially fixed; asked the client Q2 in [[client-communication/<ID>]]"
 ```
 
-Read the session ID from `$CLAUDE_CODE_SESSION_ID`; never guess it. Never delete rows. For a move
-into `PENDINGS/`, first add the questions to `grimoire/client-communication/<ID>.md` (format in
+The script reads the session ID from `$CLAUDE_CODE_SESSION_ID` and refuses without it; never edit
+the table by hand. For a move into `PENDINGS/`, first add the questions to
+`grimoire/client-communication/<ID>.md` (format in
 `/summon` Step 2) with the answer `pending`, and point the note at them. When the client answers,
 fill in the answer and outcome there before taking the review back to `WIP/`.
 

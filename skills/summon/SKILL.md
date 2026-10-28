@@ -138,7 +138,7 @@ project/
     in_scope_repo/              # already present
     grimoire/
         findings/               # findings during this audit
-            SESSIONS.md         # session log (see below)
+            SESSIONS.md         # session log: history (see below)
             invalid/            # discarded, closed or invalidated
             valid/              # valid / submitted
             WIP/                # every new finding file lands here
@@ -184,19 +184,39 @@ in the engagement.
 **Session logs.** `findings/`, `hypotheses/`, `peer-review/`, `mitigation-review/`, `tomes/` and
 `client-communication/` each get a `SESSIONS.md` at their root, so any file in them can be traced
 back to the Claude Code session that worked on it and resumed there (`claude --resume <session-id>`).
-Create each one with this header:
+The session ID is always read from `$CLAUDE_CODE_SESSION_ID`, never guessed. There are two kinds:
 
-```markdown
-| File | Session ID | Date | Event | Notes |
-|---|---|---|---|---|
-```
+- **Status snapshots** — `hypotheses/`, `peer-review/` and `mitigation-review/`. One row per file,
+  holding only its current state: the folder it is in now, the last session that worked on it, when,
+  and a short note (verdict, claim, what the client was asked). Every create or move replaces the
+  file's row; history is not kept here. Always write it with `scripts/session-status.sh` (this
+  skill's), which replaces the row under a lock so parallel sessions never lose each other's
+  updates; never edit the table by hand:
 
-Whenever a file is created in, or moved between, that folder's subfolders, append a row: the file name,
-the session ID read from `$CLAUDE_CODE_SESSION_ID` (never guessed), the date, the event (`created in
-<subfolder>`, e.g. `WIP` or `tomes/active`, `created` for the flat `client-communication/`, or
-`moved <from> → <to>`), and a short note (for example the verdict, or what the client was
-asked). Never delete rows; a file's rows are its history. The `original-findings/` mirror is not
-logged: `/findings-sync` writes it, not a research session.
+  ```bash
+  <summon>/scripts/session-status.sh grimoire/<folder>/SESSIONS.md <file-name> <status> "<note>"
+  ```
+
+  It creates the file with this header if missing:
+
+  ```markdown
+  | File | Status | Session ID | Updated | Notes |
+  |---|---|---|---|---|
+  ```
+
+- **History logs** — `findings/`, `tomes/` and `client-communication/`. Every create or move appends
+  a row, and rows are never deleted; a file's rows are its history. Create each with this header:
+
+  ```markdown
+  | File | Session ID | Date | Event | Notes |
+  |---|---|---|---|---|
+  ```
+
+  The event is `created in <subfolder>` (e.g. `WIP` or `tomes/active`; `created` for the flat
+  `client-communication/`) or `moved <from> → <to>`. Add rows with a shell append (`>>`), never by
+  reading and rewriting the file, so rows from parallel sessions are never lost.
+
+The `original-findings/` mirror is not logged: `/findings-sync` writes it, not a research session.
 
 **Hypothesis files.** Every `hypotheses/` file uses this format, wherever it was created (by hand or
 by `/delve`), so a lead's outcome can always be read from the file and its folder:
@@ -205,6 +225,7 @@ by `/delve`), so a lead's outcome can always be read from the file and its folde
 ---
 source: <delves/<session-id>/leads/<lead>.md, one per line, or `manual`>
 outcome: <empty in WIP/ | promoted: findings/WIP/<file>.md | invalid: <why> | expected behavior: <why>>
+claimed-by: <empty, or the session ID validating it now>
 ---
 # <hypothesis title>
 
@@ -227,7 +248,8 @@ the same step:
 - **Finding reinstated** (`findings/invalid/` → `valid/` or `WIP/`): move the hypothesis back to
   `valid/` and restore `outcome: promoted: <finding path>`, with a dated note.
 
-Update the links in both files to the new paths, and append a row to both `SESSIONS.md` logs. A
+Update the links in both files to the new paths, update the hypothesis's row in
+`hypotheses/SESSIONS.md` (`session-status.sh`), and append the move to `findings/SESSIONS.md`. A
 finding with no `hypothesis:` link moves alone.
 
 **Client communication.** One file per finding, `client-communication/<finding-ID>.md`, holds every
