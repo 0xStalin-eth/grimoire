@@ -74,7 +74,7 @@ grimoire/
     delves/                 one <session-id>/ per /delve run: board.md, leads/
     peer-review/            SESSIONS.md, WIP/, done/, archived/
     mitigation-review/      SESSIONS.md, WIP/, PENDINGS/, done/, archived/
-    client-communication/   SESSIONS.md, one <finding-ID>.md per finding
+    client-communication/   SESSIONS.md, kickoff-questions.md, one <finding-ID>.md per finding
     tomes/                  SESSIONS.md, active/, archived/
     report-deliverables/    protocol-summary.md, executive-summary.md
     sigil-findings/, spells/, tmp/
@@ -103,6 +103,7 @@ Run this first on any new codebase. It creates your `GRIMOIRE.md` — the living
 - Creates the workspace layout above
 - Maps the architecture and identifies crown jewels (high-value targets)
 - Writes `GRIMOIRE.md` — a structured summary of the protocol
+- Writes `client-communication/kickoff-questions.md` — questions for the client kickoff call: spec ↔ code gaps, unusual mechanisms, unclear concepts, roles and invariants, each with its evidence
 - Surfaces automation opportunities
 - Can spawn a sigil swarm for initial vulnerability hunting
 - With a bug-bounty program URL, first fetches the scope and clones the in-scope repositories
@@ -262,6 +263,8 @@ Files: `mitigation-review/WIP/` → `done/` when closed, `archived/` when discar
 ### Client communication
 
 `client-communication/<finding-ID>.md` keeps every question asked to the client about a finding, numbered in order, with the answer (or `pending`) and what it changed. Questions are never rewritten; a follow-up is a new question.
+
+`client-communication/kickoff-questions.md` holds the protocol-level questions `/summon` prepares for the kickoff call. After the call, fill in the answers and fold what they change into `GRIMOIRE.md`.
 
 ---
 

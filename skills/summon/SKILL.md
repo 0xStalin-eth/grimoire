@@ -42,6 +42,7 @@ in_progress before starting it and completed when done.
 - [ ] 5. Identify crown jewels — determine high-impact targets and threat model
 - [ ] 5b. Capture scope constraints — capability vs trust assumptions, out-of-scope, invariants
 - [ ] 6. Write GRIMOIRE.md — assemble the contextual map
+- [ ] 6b. Write kickoff questions — what to ask the client on the kickoff call
 - [ ] 7. Review GRIMOIRE.md — kick off subagent to verify accuracy and trim bloat
 - [ ] 8. Surface automation opportunities — check for spellbook modules to run
 - [ ] 9. Spawn sigil swarm — run checks-based sigils against the codebase
@@ -171,6 +172,7 @@ project/
         delves/                 # one <session-id>/ per /delve run (board.md, leads/); for /dig-mode
         client-communication/   # conversations with the client: one <finding-ID>.md per finding
             SESSIONS.md
+            kickoff-questions.md  # questions for the kickoff call (created in step 6b)
         report-deliverables/
             protocol-summary.md
             executive-summary.md
@@ -298,6 +300,13 @@ where possible.
 Start by reading documentation if available (README, docs/, wiki). Then scan the codebase
 structure, dependency manifests, and configuration files. Documentation conveys intent; code
 conveys reality. Cross-reference both.
+
+**Collect kickoff questions (steps 3–5b).** While exploring, note anything worth asking the client
+on the kickoff call: an unusual mechanism, a protocol-specific concept, a gap between the docs and
+the code, or missing information needed to connect the two. Tell every exploration subagent to
+return its candidate questions with its results, each with the evidence that raised it (`path:line`
+and/or the doc passage). Before keeping a question, check that the code and docs can't answer it.
+The questions are written to a file in step 6b.
 
 ### 4. Map Architecture and Flows
 
@@ -455,6 +464,69 @@ deeper investigation. Keep this brief — it will grow during the engagement.]
 - Consult `examples/grimoire-md-example.md` for a concrete reference of what a completed
   GRIMOIRE.md looks like.
 
+### 6b. Write Kickoff Questions
+
+Write the questions collected in steps 3–5b to `grimoire/client-communication/kickoff-questions.md`.
+This file is about the protocol as a whole; questions about a single finding go in that finding's
+`<finding-ID>.md`. If the file already exists, add new questions after the last ID and do not
+rewrite earlier ones. Append a `created` row to `client-communication/SESSIONS.md`.
+
+**What to ask:**
+- **Spec ↔ implementation gaps** — the docs say one thing and the code does another; code behavior
+  with no spec; a documented feature not found in the code; a value, formula or threshold the docs
+  do not explain.
+- **Unusual mechanisms** — non-standard designs, custom math, odd ordering or state transitions,
+  workarounds: why was it built this way, and what does it protect against?
+- **Concepts** — protocol-specific terms, external dependencies or integrations whose intended
+  semantics are unclear.
+- **Scope, roles and deployment** — ambiguous clauses from step 5b, the intended capabilities of
+  each privileged role, off-chain or out-of-repo components, deployment targets, configuration
+  and parameter values, upgrade paths.
+- **Invariants and edge cases** — what must always hold, and what should happen in an edge case the
+  code handles in a surprising way (or not at all).
+
+**Rules:**
+- Ask only what the code and docs cannot answer. A question the reviewer can answer by reading is
+  dropped.
+- Every question cites its evidence, so the answer can be applied without re-exploring.
+- Ask about intended behavior, not suspected bugs. If a question comes from a suspected bug, also
+  open a hypothesis in `hypotheses/WIP/` and link it.
+- Order each section by impact: questions that change scope, crown jewels or trust assumptions
+  come first. List the most important 5–10 under **Priority** for a short call.
+
+**Template:**
+
+```markdown
+# Kickoff questions — <Project Name>
+
+> Prepared: <YYYY-MM-DD> · Call: <YYYY-MM-DD, or `not scheduled`>
+
+## Priority
+<5–10 question IDs to ask first if time is short, e.g. K3, K1, K7>
+
+## Spec ↔ implementation gaps
+### K1 — <short title>
+**Question:** <what to ask the client>
+**Why we ask:** <what the docs say (source) vs what the code does (`path:line`), or what is missing>
+**What the answer changes:** <scope, a trust or capability assumption, a crown jewel, a hypothesis>
+**Hypothesis:** <hypotheses/WIP/<file>.md, or `none`>
+**Answer:** <`pending` until the call>
+
+## Unusual mechanisms
+## Concepts
+## Scope, roles and deployment
+## Invariants and edge cases
+```
+
+IDs (`K1`, `K2`, …) are unique across sections. Leave a section out if it has no questions.
+
+**After the call:** fill each **Answer**, then fold what changes the map into GRIMOIRE.md (scope
+constraints, invariants, crown jewels — cite `kickoff call <date>` as the source) and update any
+linked hypothesis. A follow-up is a new question with a new ID.
+
+When summoned from a bounty program there is usually no kickoff call. Write the file anyway, with
+`Call: not scheduled`; it is the list for the program's support channel.
+
 ### 7. Review GRIMOIRE.md
 
 After writing GRIMOIRE.md, kick off a subagent to review it. The subagent should read both
@@ -486,8 +558,14 @@ claims against the actual codebase:
    - Significant components missing from the architecture
    - Crown jewels that seem absent given the project domain
 
+4. **Kickoff questions check** — Read `grimoire/client-communication/kickoff-questions.md`:
+   - Drop questions the code or docs already answer (give the answer and its location).
+   - Verify each cited `path:line` and doc passage.
+   - Merge duplicates and flag questions phrased as accusations rather than about intent.
+   - Flag gaps between docs and code it noticed that have no question.
+
 The subagent should return a short list of specific corrections, cuts, and additions. Apply them
-to GRIMOIRE.md before presenting the final version to the user. Show the user what the subagent
+to GRIMOIRE.md and the kickoff questions before presenting the final version to the user. Show the user what the subagent
 found and what was changed.
 
 ### 8. Surface Automation Opportunities
