@@ -15,7 +15,7 @@ Every idea starts as a **hypothesis** and ends either as a **finding** or as a r
 ```
                     research (you reading code, sigil agents, agent runs)
                          │                                   │
-               manual idea                                /delve
+     manual idea / /write-hypothesis                      /delve
                          │                    writes delves/<session-id>/
                          │                       board.md + leads/<lead>.md
                          ▼                                   │
@@ -75,7 +75,7 @@ grimoire/
     peer-review/            SESSIONS.md, WIP/, done/, archived/
     mitigation-review/      SESSIONS.md, WIP/, PENDINGS/, done/, archived/
     client-communication/   SESSIONS.md, kickoff-questions.md, one <finding-ID>.md per finding
-    tomes/                  SESSIONS.md, active/, archived/
+    tomes/                  SESSIONS.md, LINKS.md, active/, archived/
     report-deliverables/    protocol-summary.md, executive-summary.md
     sigil-findings/, spells/, tmp/
 GRIMOIRE.md
@@ -88,6 +88,8 @@ GRIMOIRE.md
 - In `findings/`, `tomes/` and `client-communication/` it is a **history log**: every create or move adds a row, and rows are never deleted.
 
 **Hypotheses ⇄ findings ⇄ delves stay in sync.** A hypothesis file records where it came from (`source:`) and how it ended (`outcome:`). A promoted finding links back to its hypothesis. If the finding is rejected later, the hypothesis moves to `invalid/` too. Delve never stores a lead's status itself; it reads it from the hypothesis's folder.
+
+**Tomes stay in sync through `tomes/LINKS.md`.** Tomes are meant to be read on their own, so a topic is often written in several of them. `LINKS.md` names one **owner** section per shared topic and lists its **copies**. Ownership is per topic: a tome built from others starts as a copy of everything it pulls in, and takes ownership of a topic once it becomes the place that topic is worked on in depth. When `/tome` changes a claim in a section, it updates the owner and every copy in the same pass (owner → copies), and adds rows when a new tome is spun off an old one. `/tome-sync` is the safety net: it sweeps for copies that drifted anyway (hand edits, other sessions, other skills), reports them, and fixes only what you approve.
 
 **`tomes/archived/` is never read.** It keeps a record of old work; its conclusions are outdated and likely invalid. Every skill reads `tomes/active/` only.
 
@@ -154,7 +156,7 @@ Create and apply vulnerability pattern checks against the codebase. Each check i
 
 ### Manual hypotheses
 
-When something looks off while you read code, record it as `hypotheses/WIP/<name>.md` (or just tell `/validate-hypothesis` the idea; it records it for you). Hypothesis files use one format: `source:` and `outcome:` front matter, a testable description with `path:line`, and dated `## Notes`.
+When something looks off while you read code, record it as `hypotheses/WIP/<name>.md`. `/write-hypothesis` does this for you from an idea or from the part of the conversation that explored it: it writes the file, narrows the possible outcomes into ruled out / open / confirmed using what was already established, logs it, and stops without investigating. (`/validate-hypothesis` also records an idea you give it, but then goes on to settle it.) Hypothesis files use one format: `source:` and `outcome:` front matter, a testable description with `path:line`, and dated `## Notes`.
 
 ### `/delve`
 
@@ -298,9 +300,11 @@ Day 2–N — Research
   /checks, sigil agents      → automated hunting
   /delve                     → what the agents found odd → hypotheses/WIP/
   manual reading             → your own ideas → hypotheses/WIP/
+  /write-hypothesis          → turn an idea or a conversation into a hypothesis (writes, then stops)
   /dig-mode                  → build context on a lead or a system
   /validate-hypothesis       → settle each hypothesis → findings/WIP/ or hypotheses/invalid/
   /write-poc                 → (called by validate-hypothesis, or on its own)
+  /tome-sync                 → now and then: find and fix tomes whose copies drifted from their owner
 
 Before Submitting
   /finding-review, hag       → quality and red-team each draft in findings/WIP/

@@ -36,6 +36,12 @@ write the evidence gap clearly.
 - Keep `GRIMOIRE.md` concise and link outward to tomes.
 - Tomes contain supported conclusions and reasoning; cartography contains navigation.
 - Prefer updating existing tomes over creating near-duplicates.
+- Keep shared topics in sync. `grimoire/tomes/LINKS.md` names one owner section per topic shared
+  across tomes, plus its copies. Before editing a section, look it up there. If the edit changes a
+  claim, update the owner and every copy in the same pass (owner → copies). A tome spun off or built
+  from others starts as a copy of every topic it pulls in; when it goes deeper on its own subject,
+  ownership of that topic transfers to it. See `references/links.md` (how owners are chosen, push up
+  vs transfer); `/tome-sync` sweeps for drift that slipped past.
 - Preserve useful negative results when they prevent repeated work.
 - Mark uncertain material as open questions, not facts.
 - Do not change evidence to match a conclusion.
@@ -128,6 +134,9 @@ Read `references/workflow.md` for the full procedure and completion criteria.
 - `references/workflow.md` — base and research workflows with completion criteria.
 - `references/health-check.md` — lint, review, and completion checklist for tome
   repositories.
+- `references/links.md` — `LINKS.md`: owner and copies of each shared topic, editing rules,
+  open drift.
 
 Read only the references needed for the task, but always read `evidence-model.md` before
-writing or changing claims.
+writing or changing claims, and `links.md` before editing a tome when `grimoire/tomes/LINKS.md`
+exists.

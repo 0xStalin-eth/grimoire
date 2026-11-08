@@ -7,7 +7,8 @@ description: >-
   grimoire/hypotheses/WIP/ (created by hand or by /delve) and wants it explored and settled. Traces the
   mechanism in code, checks whether the behavior is intended, proves it with a PoC, gets an independent
   triage, and records the outcome: promoted to a finding draft in findings/WIP/, or closed in
-  hypotheses/invalid/ as invalid or expected behavior. Not for surfacing leads (use /delve), building
+  hypotheses/invalid/ as invalid or expected behavior. Not for only writing a hypothesis down (use
+  /write-hypothesis), surfacing leads (use /delve), building
   context through questions (use /dig-mode), reviewing someone else's finding (use /peer-review), or
   writing up an already-proven bug (use /finding-draft).
 user_invocable: true

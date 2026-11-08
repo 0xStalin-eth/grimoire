@@ -41,10 +41,12 @@ forge-poc-templates/          # Git submodule: Immunefi's Solidity PoC library
 | `peer-review` | Validate findings written by peers or AI agents: reproduce with a PoC, check validity, scope, severity and duplicates, verify the fix, produce the verdict and follow-up write-ups |
 | `findings-sync` | Mirror the findings repo locally: pull new issues, and update existing ones after preserving the original write-up and every replaced version |
 | `validate-hypothesis` | Settle a hypothesis from `hypotheses/WIP/` (manual or from delve): explore, check intent, prove with a PoC, independent triage, then promote to a finding draft or close as invalid / expected behavior |
+| `write-hypothesis` | Turn an idea or a part of the conversation into a `hypotheses/WIP/` file in the summon format, with outcomes narrowed to ruled out / open / confirmed; writes and stops |
 | `summon` | Initialize a grimoire workspace on a new codebase (creates GRIMOIRE.md, maps architecture) |
 | `cartography` | Map and document code flows with indexed YAML-frontmatter cartography files |
 | `review-cartography` | Verify and refine existing cartography flows |
 | `gc-cartography` | Detect overlapping flows, merge/deduplicate cartography |
+| `tome-sync` | Sweep tomes for copies that drifted from their owner section (`tomes/LINKS.md`), map unlinked shared topics, fix only what the user approves |
 
 ### Specified but Not Yet Implemented
 

@@ -167,6 +167,7 @@ project/
         spells/                 # scripts, PoCs, static analysis modules
         tomes/                  # documentation, detailed notes, learnings
             SESSIONS.md
+            LINKS.md            # owner + copies of each topic shared across tomes (tome skill, references/links.md)
             active/
             archived/           # record of old work only; outdated, likely invalid, never read
         delves/                 # one <session-id>/ per /delve run (board.md, leads/); for /dig-mode
@@ -182,6 +183,9 @@ project/
 
 Create `protocol-summary.md` and `executive-summary.md` as empty files; they are filled in later
 in the engagement.
+
+Create `tomes/LINKS.md` with the header and rules from the tome skill's `references/links.md` and no
+rows yet. Rows are added as soon as a topic is written into a second tome.
 
 **Session logs.** `findings/`, `hypotheses/`, `peer-review/`, `mitigation-review/`, `tomes/` and
 `client-communication/` each get a `SESSIONS.md` at their root, so any file in them can be traced

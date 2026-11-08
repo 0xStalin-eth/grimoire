@@ -172,8 +172,23 @@ questions. If a page could fit multiple directories, choose the one a human woul
 likely browse first and add cross-links to the other relevant pages. Use `notes/` for
 durable context that does not cleanly fit a stricter category yet.
 
+**Shared topics.** If `grimoire/tomes/LINKS.md` exists, look up every section you are about to change
+(see `links.md`):
+- Before writing, note whether the section is the **owner** or a **copy** of its topic.
+- If the change alters a claim, update the owner first, then every copy listed, in the same pass, and
+  bump `Synced`.
+- If you are adding a claim to a **copy** that its owner lacks, choose **push up** (write it into the
+  owner too; default when the topic is background for this tome) or **transfer** (this section becomes
+  the owner; default when the topic is this tome's subject). Follow the transfer steps in `links.md`
+  and tell the user which you chose.
+- If an owner and a copy disagree and it isn't clear which is right, ask the user.
+- If a new tome or section repeats a topic another tome already covers, add it to that row's copies;
+  it owns nothing yet. For a topic with no row, pick the owner by subject, then by the fullest current
+  claims, and say which you picked. Create `LINKS.md` if this is the first topic shared between two
+  tomes.
+
 Completion criterion: the page saves future readers time without hiding evidence,
-limits, or uncertainty.
+limits, or uncertainty, and no copy listed in `LINKS.md` now contradicts its owner.
 
 ### 6. Cross-Link Navigation And History
 
@@ -190,6 +205,9 @@ the tome.
 If `grimoire/tomes/index.md` exists, add every new page under the correct directory or
 type with one factual summary. If a log file exists, append one task entry listing
 every created, updated, archived, or deleted tome.
+
+List every copy you synced in the answer and in the log entry, and name the owner. Drift you saw but
+did not fix goes under `Open drift` in `LINKS.md`.
 
 Completion criterion: every changed research artifact is discoverable from an index,
 log, `GRIMOIRE.md`, or a related page.
