@@ -171,6 +171,9 @@ append a `created in WIP` row to `grimoire/findings/SESSIONS.md` for a new draft
 
 From here on, the finding and the hypothesis move together: if the finding is later rejected, its
 hypothesis goes back to `invalid/` (rule in `/summon` Step 2, "Findings and hypotheses stay in sync").
+When the user confirms the draft was submitted, move it to `findings/valid/` and update the
+hypothesis's `outcome:` link and both logs in the same turn (rule in `/summon` Step 2, "Finding
+submitted").
 
 Never edit the delve folders. A lead's status is read from its hypothesis's folder, so moving the
 hypothesis is all the sync a delve needs.

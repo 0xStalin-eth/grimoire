@@ -7,8 +7,13 @@ Documents the layout and conventions for security findings within a grimoire wor
 ```
 grimoire/
   findings/                  # Manual audit findings
-    <finding-slug>.md
-    <finding-slug>.md
+    SESSIONS.md              # history log: created, updated, submitted, moved
+    WIP/                     # every new draft lands here
+      <finding-slug>.md
+    valid/                   # submitted (or confirmed valid) findings
+      <finding-slug>.md
+    invalid/                 # discarded, closed or rejected
+    original-findings/       # findings-repo mirror kept by /findings-sync
   sigil-findings/            # Automated / agent-derived findings
     <finding-slug>.md
   pocs/                      # Proof-of-concept artifacts (referenced by findings)
@@ -26,6 +31,13 @@ Findings produced through manual security research:
 - Findings drafted with `/finding` or `/finding-draft`
 - Findings from manual triage and PoC development
 - This is the default directory for the draft workflow
+
+A finding moves through three folders:
+- **`WIP/`**: every new draft is written here (`/finding-draft`, `/validate-hypothesis`).
+- **`valid/`**: when the user confirms the finding was submitted, move it here in the same turn and
+  update its links and logs (the "Finding submitted" rule in `/summon` Step 2).
+- **`invalid/`**: a rejected finding moves here, and its hypothesis moves to `hypotheses/invalid/`
+  with it (the "Findings and hypotheses stay in sync" rule in `/summon` Step 2).
 
 ### `grimoire/sigil-findings/`
 

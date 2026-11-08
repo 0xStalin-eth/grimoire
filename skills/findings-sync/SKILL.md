@@ -127,6 +127,10 @@ titles that changed upstream (the file kept its name). Then suggest:
 - **Diff against the original** when the user wants to see how a finding evolved:
   `diff <mirror>/originals/issue<N>-*.md <mirror>/issue<N>-*.md`.
 - **Update the duplicates index** (if the project keeps one) for newly pulled issues.
+- **Move submitted drafts.** For each newly pulled issue, look for a local draft in
+  `grimoire/findings/WIP/` with the same title (or a front-matter line naming the issue). If one
+  matches, the draft was submitted: ask the user to confirm, then apply the "Finding submitted" rule in
+  `/summon` Step 2 (move it to `findings/valid/`, update links and logs, record the issue number).
 
 ## Legacy copies
 

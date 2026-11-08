@@ -166,3 +166,7 @@ Based on the finding:
 - If the pattern could be generalized into a check: suggest [[checks]]
 - If the finding represents an automatable pattern: suggest [[scribe-distill]] to distill
   it into a reusable detection module
+
+When the user later confirms the finding was submitted, move it from `findings/WIP/` to
+`findings/valid/` in the same turn and update its links and logs: the "Finding submitted" rule in
+`/summon` Step 2.

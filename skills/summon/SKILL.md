@@ -258,6 +258,22 @@ Update the links in both files to the new paths, update the hypothesis's row in
 `hypotheses/SESSIONS.md` (`session-status.sh`), and append the move to `findings/SESSIONS.md`. A
 finding with no `hypothesis:` link moves alone.
 
+**Finding submitted.** `findings/valid/` holds submitted findings. When the user says a finding in
+`findings/WIP/` was submitted (posted to the findings repo, or sent in the report), act in the same
+turn, without waiting to be asked:
+1. Move the file `findings/WIP/<name>.md` → `findings/valid/<name>.md`. Never overwrite: check the
+   name is free first.
+2. Update every link to its old path: the hypothesis's `outcome: promoted: <path>`, and any tome,
+   `tomes/LINKS.md` row or client question that names it (`grep -rl "findings/WIP/<name>.md" grimoire/`).
+   The finding's own `hypothesis:` link does not change; the hypothesis stays in `hypotheses/valid/`.
+3. Add a dated line to the hypothesis's `## Notes` ("finding submitted"), update its row in
+   `hypotheses/SESSIONS.md` (`session-status.sh … valid "…; finding submitted, now findings/valid/<name>.md"`),
+   and append a `submitted` row to `findings/SESSIONS.md` with the issue number if the user gave one.
+4. Tell the user where the file went and which links changed.
+
+If the user only says they are about to submit, or the submission is pending review, leave the file in
+`WIP/`. If a submitted finding is later rejected, the "Finding rejected" rule above applies.
+
 **Client communication.** One file per finding, `client-communication/<finding-ID>.md`, holds every
 question asked to the client about that finding and its answer. Questions are numbered in the order
 asked and never rewritten; a follow-up is a new question. Create the file with the first question:

@@ -5,7 +5,8 @@ This reference defines the format for finding files stored in `grimoire/findings
 
 ## File Location
 
-- **Manual audit findings:** `grimoire/findings/<slug>.md`
+- **Manual audit findings:** `grimoire/findings/WIP/<slug>.md` while drafted, `grimoire/findings/valid/<slug>.md`
+  once submitted
 - **Automated / sigil findings:** `grimoire/sigil-findings/<slug>.md`
 
 Filenames are kebab-case, derived from the finding title, with `.md` extension. Maximum 60

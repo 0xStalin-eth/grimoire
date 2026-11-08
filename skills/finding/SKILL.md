@@ -83,7 +83,8 @@ For detailed guidelines with more examples see `references/finding-best-practice
 
 ## Filing Conventions
 
-- **Manual audit findings:** `grimoire/findings/<slug>.md`
+- **Manual audit findings:** `grimoire/findings/WIP/<slug>.md` while drafted; moved to `findings/valid/`
+  when the user confirms it was submitted (`/summon` Step 2, "Finding submitted")
 - **Automated / sigil findings:** `grimoire/sigil-findings/<slug>.md`
 - **Filenames:** kebab-case from title, `.md` extension, max 60 characters
 - **Collision handling:** append numeric suffix (`-2`, `-3`)
