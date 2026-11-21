@@ -17,7 +17,7 @@ Every idea starts as a **hypothesis** and ends either as a **finding** or as a r
                          │                                   │
      manual idea / /write-hypothesis                      /delve
                          │                    writes delves/<session-id>/
-                         │                       board.md + leads/<lead>.md
+                         │                       board-<focus>.md + leads/<lead>.md
                          ▼                                   │
                  hypotheses/WIP/<name>.md  ◄─────────────────┘  (1 lead = 1 hypothesis,
                  (source: manual | delve lead)                   source: links back)
@@ -71,7 +71,7 @@ grimoire/
     findings/               SESSIONS.md, WIP/, valid/, invalid/
         original-findings/  mirror of the findings repo (/findings-sync): CLOSED/, originals/, history/
     hypotheses/             SESSIONS.md, WIP/, valid/, invalid/
-    delves/                 one <session-id>/ per /delve run: board.md, leads/
+    delves/                 one <session-id>/ per session: board-<focus>.md per delve, leads/
     peer-review/            SESSIONS.md, WIP/, done/, archived/
     mitigation-review/      SESSIONS.md, WIP/, PENDINGS/, done/, archived/
     client-communication/   SESSIONS.md, kickoff-questions.md, one <finding-ID>.md per finding
@@ -156,13 +156,13 @@ Create and apply vulnerability pattern checks against the codebase. Each check i
 
 ### Manual hypotheses
 
-When something looks off while you read code, record it as `hypotheses/WIP/<name>.md`. `/write-hypothesis` does this for you from an idea or from the part of the conversation that explored it: it writes the file, narrows the possible outcomes into ruled out / open / confirmed using what was already established, logs it, and stops without investigating. (`/validate-hypothesis` also records an idea you give it, but then goes on to settle it.) Hypothesis files use one format: `source:` and `outcome:` front matter, a testable description with `path:line`, and dated `## Notes`.
+When something looks off while you read code, record it as `hypotheses/WIP/<name>.md`. `/write-hypothesis` does this for you from an idea or from the part of the conversation that explored it: it writes the file, narrows the possible outcomes into ruled out / open / confirmed using what was already established, logs it, and stops without investigating. (`/validate-hypothesis` also records an idea you give it, but then goes on to settle it.) Hypothesis files use one format: `source:` and `outcome:` front matter, a testable description with `path:line`, an **At risk** line (the invariant or asset that could break, checkable without knowing the cause) next to the **Suspected mechanism**, a **Parameters that decide it** table (who sets each value, its allowed range, its break-even), an **If the suspected mechanism is wrong** section, and dated `## Notes`. Framing a hypothesis around what is at risk keeps it alive when its suspected cause turns out wrong but the same invariant breaks another way.
 
 ### `/delve`
 
 After autonomous research (sigil agents, long agent runs), `/delve` shows you what the agents found odd: near-misses, unexplained mechanisms, fragile assumptions. It ranks 3–7 leads on a board and lists known findings and dead ends separately, so you don't re-open them.
 
-- Saves each run to `delves/<session-id>/` (`board.md` + one file per lead), so parallel delves never collide and any session can read them later
+- Saves each run to `delves/<session-id>/` (one `board-<focus>.md` per delve + one file per lead), so parallel delves never collide and any session can read them later
 - Records every lead as a hypothesis in `hypotheses/WIP/` (or adds itself as a source of the existing one)
 - Never picks a lead for you, never investigates, never moves a hypothesis
 
@@ -183,12 +183,12 @@ A question-and-answer mode for building context fast: you ask short questions, i
 Settles one hypothesis from `hypotheses/WIP/`:
 
 1. **Load** — reads the hypothesis and its delve leads; stops if a finding or dead end already covers it
-2. **Explore** — traces the path in code and checks every sibling implementation (can use a `sigil` agent or the `librarian`)
+2. **Explore** — traces the path in code and checks every sibling implementation (can use a `sigil` agent or the `librarian`); walks every door to the asset at risk, not only the suspected one, and reads each deciding parameter's allowed range
 3. **Check intent** — docs, tests, client answers, `/divine`
-4. **Prove it** — `/write-poc`; a test showing the attack fails also counts
-5. **Independent triage** — the `familiar` agent gets the evidence, not the verdict
-6. **Verdict** [you confirm] — Valid, Invalid, Expected behavior, or Inconclusive
-7. **File it** [you confirm] — Valid: hypothesis → `valid/`, draft → `findings/WIP/`. Invalid / Expected behavior: → `invalid/` with the reason. Inconclusive: stays in `WIP/`, question → `client-communication/`
+4. **Prove it** — `/write-poc`, in three passes: the claim, a sweep of every deciding parameter across its range and past its break-even, and (for value leaks) a direct invariant check over every entry and exit pair; every value transfer any test shows goes into an impact ledger in `## Notes`. A test showing the attack fails also counts
+5. **Independent triage** — the `familiar` agent gets what is at risk and the evidence, not the verdict, and reports every value transfer it measures separately from its verdict
+6. **Verdict** [you confirm] — first two answers, Claim (true as worded?) and Impact (does value move anyway?), then Valid, Reframed, Invalid, Expected behavior, or Inconclusive. A measured loss never closes as Invalid: each ledger entry is reframed into the hypothesis, spun off as a new one, promoted, or linked to a filed finding or client answer
+7. **File it** [you confirm] — Valid: hypothesis → `valid/`, draft → `findings/WIP/`. Reframed: stays in `WIP/`, retitled around what actually breaks, validated again. Invalid / Expected behavior: → `invalid/` with the reason. Inconclusive: stays in `WIP/`, question → `client-communication/`
 
 Every check is written to the hypothesis's `## Notes` as it happens, so an unfinished validation can be resumed from the file alone.
 
@@ -262,6 +262,10 @@ After the audit, reviews the client's fix for each finding: maps report → issu
 
 Files: `mitigation-review/WIP/` → `done/` when closed, `archived/` when discarded. A **Partially fixed** or **Not fixed** review you move on from goes to `PENDINGS/`, its questions go to `client-communication/<ID>.md`, and the session that did the work is logged so you can resume it when the client answers.
 
+### `/protocol-summary`
+
+Condenses what the research learned into `report-deliverables/protocol-summary.md`, the report's description of how the protocol works. It reads the tomes, the hypotheses closed as expected behavior or invalid, the delves, the client's answers and the findings, keeps the mechanisms and quirks a reader needs, checks every claim in the code, and writes them in plain language with no audit vocabulary. Three modes: **build** the whole summary, add or change one **section** (usually right after a conversation settled a topic), or **check** which sections went stale after tomes or hypotheses changed. `report-deliverables/protocol-summary.sources.md` records which research and which code locations each section came from.
+
 ### Client communication
 
 `client-communication/<finding-ID>.md` keeps every question asked to the client about a finding, numbered in order, with the answer (or `pending`) and what it changed. Questions are never rewritten; a follow-up is a new question.
@@ -305,6 +309,8 @@ Day 2–N — Research
   /validate-hypothesis       → settle each hypothesis → findings/WIP/ or hypotheses/invalid/
   /write-poc                 → (called by validate-hypothesis, or on its own)
   /tome-sync                 → now and then: find and fix tomes whose copies drifted from their owner
+  /protocol-summary          → add a topic to the protocol summary once a dig or validation settles it
+  /invariants                → build the invariant list once research is mature; later research → an additions file
 
 Before Submitting
   /finding-review, hag       → quality and red-team each draft in findings/WIP/
@@ -314,7 +320,8 @@ Before Submitting
 Report Phase
   /findings-sync             → mirror the findings repo
   /peer-review               → validate peers' and agents' findings
-  report-deliverables/       → protocol summary and executive summary
+  /protocol-summary          → condense the research into the report's protocol summary
+  report-deliverables/       → executive summary
 
 Mitigation Phase (fix checkout)
   /mitigation-review         → per finding; PENDINGS/ while waiting on the client

@@ -36,6 +36,12 @@ next session starts from a narrowed set of outcomes instead of from zero.
   only. The file must not repeat a mistake the conversation already fixed.
 - **Readable cold.** Someone who wasn't in the conversation must understand the file alone. Explain
   each domain term or symbol where it is first used, and never refer to "what we said above".
+- **Frame what is at risk, not only why.** A hypothesis names the invariant or asset that could break
+  ("no round trip returns more USDC than it paid in; the hub never pays above issuance cost") and,
+  separately, the mechanism suspected of breaking it. The suspected mechanism is one branch of the
+  outcome tree, never the whole hypothesis. A hypothesis framed as a single cause gets closed when that
+  cause is disproved, even if another path breaks the same invariant; framing it around what is at risk
+  keeps the other paths open.
 
 ## Inputs
 
@@ -64,7 +70,17 @@ Create a todo list from these steps. Steps marked **[confirm]** pause for the us
 ### 1. Gather
 
 From the conversation, collect:
-- **The claim.** One testable sentence: who does what, through which path, and what could break.
+- **What is at risk.** The invariant that must hold, or the asset that must not move, and whose it is:
+  "the hub's USDC only leaves at or below the price the FT cost to issue", "a vault share never prices
+  below its backing". State it so it can be checked without knowing the suspected cause.
+- **The suspected mechanism.** One testable sentence: who does what, through which path, and what
+  could break. If the conversation suspected several causes, list each one.
+- **The parameters that decide it.** Every value the outcome depends on that governance, the market or
+  the caller sets (a premium, a fee, a cap, an oracle print, a pool depth, a trade size), with its
+  allowed range in code and, if the conversation reached one, the break-even value where the outcome
+  flips. Mark a guessed break-even as a guess.
+- **The residual-impact question.** One line: if the suspected mechanism turns out wrong, can the same
+  invariant still break, and through which other path or actor?
 - **The facts.** Every behavior that was checked in code, with its `file:line`. Re-open a cited line
   only to confirm the citation is still right.
 - **The corrections.** Any earlier claim the conversation retracted, so it is left out.
@@ -82,7 +98,7 @@ the same `path:line`:
 
 ### 3. Build the outcome tree
 
-List the concrete ways the hypothesis could turn into impact. Give each one a status, with the reason:
+List the concrete ways the invariant could break. Give each one a status, with the reason:
 
 | Status | Meaning |
 |---|---|
@@ -90,7 +106,18 @@ List the concrete ways the hypothesis could turn into impact. Give each one a st
 | **Ruled out (to confirm)** | Very likely stopped, but one listed thing is still unchecked; name it |
 | **Open** | Not yet checked, or checked and still possible; say what would settle it |
 | **Confirmed** | Already shown to happen (by a test or an unambiguous code path); say the impact level it was shown at |
-| **Known** | Already recorded elsewhere (an idea, a finding, a client answer); link it |
+| **Known** | Already filed: a finding (draft or submitted), a findings-repo issue, or a recorded client answer; link it. An entry in an idea list, a tome quirk or an open client question is not Known: mark the outcome Open and link that entry |
+
+The tree must cover more than the suspected mechanism. Add at least one row, Open or Ruled out with a
+reason, for each of:
+- **Every door to the asset.** Each way value enters and each way it leaves the component at risk,
+  combined: if the suspicion is "mint here, exit there", list the other exits too (other pools, desks,
+  redemption paths, liquidation or termination payouts). The bug is often the door nobody suspected.
+- **Every actor.** An unprivileged caller, an existing holder, a flash-loan-funded caller, and each
+  privileged role that can set the deciding parameters.
+- **Every parameter regime.** For each parameter collected in step 1: below, at and above its
+  break-even, and its extremes (zero, the smallest accepted value, the cap). A single "realistic" value
+  can sit exactly at break-even and hide the bug.
 
 Then add:
 - **What to explore next.** A short, ordered list aimed at the open outcomes only.
@@ -110,9 +137,12 @@ source: manual
 outcome:
 claimed-by:
 ---
-# <hypothesis title: the behavior and the condition, in one line>
+# <hypothesis title: what may break and for whom, then the suspected mechanism, in one line>
 
 <one paragraph: the behavior, where it is (`path:line`), why it may matter, what would confirm or refute it>
+
+**At risk:** <the invariant or asset, and whose it is; checkable without knowing the cause>
+**Suspected mechanism:** <who does what, through which path; one line per suspected cause>
 
 **Code:**
 - `<path:line>` (<what is there>)
@@ -121,6 +151,14 @@ claimed-by:
 
 ## What is established
 <numbered facts, each with `path:line`; corrections already applied>
+
+## Parameters that decide it
+| Parameter | Set by | Allowed range (code) | Break-even (or "unknown") |
+|---|---|---|---|
+
+## If the suspected mechanism is wrong
+<the residual-impact question and what is known about it: other doors, actors or regimes that could
+break the same invariant>
 
 ## Outcomes
 | # | Possible outcome | Status | Why |
@@ -143,6 +181,9 @@ Rules:
 - `source:` is `manual` unless the idea came from a delve lead file; then list that file instead
   (one per line), as `/delve` does.
 - `outcome:` and `claimed-by:` stay empty. Writing a hypothesis does not claim it.
+- **At risk**, **Parameters that decide it** and **If the suspected mechanism is wrong** are never
+  omitted. When the conversation did not reach them, write what is unknown ("break-even unknown",
+  "other exits not checked") so `/validate-hypothesis` knows it must settle them.
 - If the project has a rule about how terms are explained (for example, in `GRIMOIRE.md` or the user's
   memory), follow it in the file.
 
@@ -160,7 +201,8 @@ Notes may not contain `|`.
 
 Then reply briefly:
 - the file path;
-- the claim in one sentence;
+- what is at risk, and the suspected mechanism, one sentence each;
+- the parameters that decide it, with their break-even if known;
 - the outcome tree as a compact table (outcome, status);
 - one line offering `/validate-hypothesis <name>` to explore it.
 

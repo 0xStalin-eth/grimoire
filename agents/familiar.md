@@ -87,6 +87,14 @@ Accepts a single finding file path OR a researcher hypothesis for validation.
    its magnitude: funds drained, privileges gained, data exfiltrated, availability
    degraded. Theoretical impacts with no exploitable value are not impact.
 
+   Keep a separate list of **every value movement you measure or see in the evidence**,
+   whether or not it supports the claim: who gained, who paid, how much, under which
+   parameter values. A hypothesis can name the wrong cause while a test on the way shows
+   a real loss through another path or at another parameter value. Refuting the claim
+   never erases such a movement; report it in the **Measured Value Transfers** section
+   so the caller can give it a home. When the input names what is at risk (an invariant
+   or asset), check that invariant directly, not only the suspected cause.
+
    **Q2 — Who can do this? (Feasibility).** Name the minimum attacker class in one line
    — "any unauthenticated user", "any token holder", "any holder of ≥N tokens", "a
    single privileged role (owner)", "a majority governance vote", "a compromised owner
@@ -362,6 +370,12 @@ to trace — <reason>
 
 ### Impact
 <What the attacker gets, concretely. 1–3 sentences, with magnitude where possible.>
+
+### Measured Value Transfers
+<Every value movement you measured or found in the evidence, whether or not it supports the
+claim: one line each with the test or source, who gained, who paid, the amount and the
+parameter values. Flag each one the claim does not explain. "None observed" if none. A
+verdict that refutes the claim does not clear these lines.>
 
 ### Feasibility
 <Who can do this, in one line — minimum attacker class. For simple findings, stop here.>

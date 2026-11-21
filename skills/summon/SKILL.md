@@ -170,7 +170,7 @@ project/
             LINKS.md            # owner + copies of each topic shared across tomes (tome skill, references/links.md)
             active/
             archived/           # record of old work only; outdated, likely invalid, never read
-        delves/                 # one <session-id>/ per /delve run (board.md, leads/); for /dig-mode
+        delves/                 # one <session-id>/ per /delve run (board-<focus>.md per delve, leads/); for /dig-mode
         client-communication/   # conversations with the client: one <finding-ID>.md per finding
             SESSIONS.md
             kickoff-questions.md  # questions for the kickoff call (created in step 6b)
@@ -182,7 +182,7 @@ project/
 ```
 
 Create `protocol-summary.md` and `executive-summary.md` as empty files; they are filled in later
-in the engagement.
+in the engagement (`protocol-summary.md` by `/protocol-summary`).
 
 Create `tomes/LINKS.md` with the header and rules from the tome skill's `references/links.md` and no
 rows yet. Rows are added as soon as a topic is written into a second tome.
@@ -232,14 +232,32 @@ by `/delve`), so a lead's outcome can always be read from the file and its folde
 source: <delves/<session-id>/leads/<lead>.md, one per line, or `manual`>
 outcome: <empty in WIP/ | promoted: findings/WIP/<file>.md | invalid: <why> | expected behavior: <why>>
 claimed-by: <empty, or the session ID validating it now>
+proposed-outcome: <empty, or a batch verdict waiting for the user (same values as outcome:, or `shortlist: <why>`)>
 ---
-# <hypothesis title>
+# <hypothesis title: what may break and for whom, then the suspected mechanism>
 
 <the behavior, where it appears (`path:line`), why it may matter, what would confirm or refute it>
 
+**At risk:** <the invariant or asset, and whose it is; checkable without knowing the cause>
+**Suspected mechanism:** <who does what, through which path; one line per suspected cause>
+
+## Parameters that decide it
+| Parameter | Set by | Allowed range (code) | Break-even (or "unknown") |
+|---|---|---|---|
+
+## If the suspected mechanism is wrong
+<other doors, actors or parameter values that could break the same invariant; "not checked" is a
+valid entry>
+
 ## Notes
-<work log: what was checked, with dates>
+<work log: what was checked, with dates; includes the impact ledger once validation starts>
 ```
+
+The **At risk** line and the two sections are required, also in files `/delve` writes. They keep a
+hypothesis alive when its suspected cause is disproved but the invariant still breaks another way:
+`/validate-hypothesis` sweeps the parameters, walks the other doors, and may not close a hypothesis
+as invalid while a measured loss has no home. `/write-hypothesis` adds more sections on top
+(established facts, outcome tree, PoC sketch, severity expectation).
 
 Moving a file out of `WIP/` sets `outcome:`. Both `invalid` (the attack does not work) and
 `expected behavior` (it works as designed) go to `invalid/`.

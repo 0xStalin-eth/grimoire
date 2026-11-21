@@ -56,7 +56,7 @@ load**: one answer should be fully absorbed before the next question.
 
 Read before answering, in this order:
 - A delve board in the current conversation, if `/delve` ran before this
-- A saved delve the user points to, `grimoire/delves/<session-id>/`: read `board.md` first, then
+- A saved delve the user points to, `grimoire/delves/<session-id>/`: read its newest `board*.md` first (or the one whose `Focus:` matches), then
   `leads/<lead>.md` as questions need. Mark answers from it "From the delve of <date>:"; the code
   may have moved since the commits in its header. Read only the delve folders the user names. A
   lead's current status is the folder its hypothesis file is in now (`grimoire/hypotheses/*/<name>.md`),

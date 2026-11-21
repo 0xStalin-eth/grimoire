@@ -4,7 +4,8 @@ description: >-
   This skill should be used when the user says "delve", "/delve", "review the
   research", "what was interesting", "surface odd behavior", "what did the agents
   find odd", "show me the leads", or wants to see what autonomous security research
-  turned up that deserves a human look. Delve is a report for the operator. It
+  turned up that deserves a human look. Also for "which leads of this delve are open",
+  "status of the delve": a read-only status of a board's leads. Delve is a report for the operator. It
   surfaces substantiated oddities, near-misses, unresolved mechanisms, and
   suspicious patterns so the operator can decide what to explore. It does not pick
   research directions, and it is not for agents to choose their next task.
@@ -107,6 +108,16 @@ Read `GRIMOIRE.md` if it exists. Then inspect relevant research output:
 If the user points to a specific agent run, transcript, file, branch, or topic, focus
 there first.
 
+**Leads the operator supplies.** The operator may hand over leads directly (a pasted list, "these
+are the leads"). Treat each as a candidate from step 2 on: check it against the code and find the
+concrete observation (`path:line`) before it goes on the board. A pasted lead with no observation
+behind it is listed under Guardrails as unverified, not copied onto the board. Record where each lead
+came from in its lead file (`Origin: operator` or `Origin: research`).
+
+**Thin research.** If the focus area has little finished research to review, say so in one sentence
+before the board (for example "only two tome sections and no sigil output cover this area"). That is
+a fact about the input, not a recommendation; delve still does not hunt.
+
 Completion criterion: you know what research was performed, what was proven, what was
 dismissed, and what remained odd.
 
@@ -169,23 +180,36 @@ edit, another session's folder.
 
 ```text
 grimoire/delves/<session-id>/
-    board.md            the Output Format below, under a header (see next)
-    leads/<lead>.md     one per lead on the board: everything captured in step 2
+    board-<focus>.md    the Output Format below, under a header (see next); one per delve
+    leads/<lead>.md     one per lead on any board of this session: everything captured in step 2
 ```
 
-`board.md` opens with a header, so a later session knows what the board is built on:
+`<focus>` is a short kebab-case name of the delve's focus (`board-XXXX.md`, where XXXX is the section or mechanism the delve explores;
+`board-all.md` when there is no focus). One session can run several delves over time: a delve with a
+new focus writes a new board and leaves the others as they are. Running delve again on the same focus
+updates that board. A legacy `board.md` from before this rule counts as a board like any other.
+
+Each board opens with a header, so a later session knows what the board is built on and which board
+is newest (batch validation picks the newest by this header, so the time is required):
 
 ```markdown
 # Delve — <YYYY-MM-DD HH:MM>
 Session: <session-id> (`claude --resume <session-id>`)
+Focus: <what this delve covers; "none" for a whole-project delve>
 Commits: <in-scope repo> @ <short sha>, one per repo (`git -C <repo> rev-parse --short HEAD`)
 ```
 
 Each `leads/<lead>.md` must make sense without this conversation. Give evidence as `path:line` and
 concrete observations. When evidence comes from a transcript that is not saved anywhere, quote the
-relevant lines into the lead file; "the agent said" alone is lost when the session ends.
+relevant lines into the lead file; "the agent said" alone is lost when the session ends. A lead file
+opens with these lines:
 
-Running delve again in the same session updates the files in this folder to the new board.
+```markdown
+Hypothesis: <name>.md
+Board: board-<focus>.md
+Priority: <High | Medium | Low>
+Origin: <research | operator>
+```
 
 **Sync with hypotheses.** For each lead on the board:
 - **No hypothesis yet:** create `grimoire/hypotheses/WIP/<lead>.md` in the hypothesis format from
@@ -195,7 +219,9 @@ Running delve again in the same session updates the files in this folder to the 
   name is taken by a different hypothesis, add a short suffix.
 - **Already a hypothesis in `WIP/`:** don't create another. Add this lead file to its `source:` list.
 
-Every lead file names its hypothesis file on its first line (`Hypothesis: <name>.md`). The lead's
+Every lead file names its hypothesis file on its first line (`Hypothesis: <name>.md`). A lead that
+appears on a second board of the same session keeps one lead file; add the new board to its `Board:`
+line. The lead's
 status is wherever that file is now (`ls grimoire/hypotheses/*/<name>.md`); never copy the status into
 the delve, so the two cannot drift. Delve only creates hypotheses and adds sources; it never moves,
 edits, or closes one.
@@ -219,6 +245,19 @@ If no good leads exist, say so directly and summarize the strongest dead ends or
 
 End with one line naming the session folder. Then stop. Do not recommend a lead. Do not offer to investigate. Do not ask which
 lead the operator wants.
+
+## Status Of A Delve
+
+When the operator asks which leads of a delve are open, answer read-only; no new board is written.
+Pick the board as batch validation does (the session's newest by header, or the one whose `Focus:`
+matches), take its hypotheses from its `Hypothesis` column, and look up each one's folder
+(`ls grimoire/hypotheses/*/<name>.md`) and `claimed-by:` / `proposed-outcome:`:
+
+| Lead | Priority | Hypothesis | Folder | Claimed by / proposed outcome |
+|------|----------|------------|--------|-------------------------------|
+
+Open leads first, then closed ones with their `outcome:`. Status is always read from the hypothesis,
+never stored in the delve.
 
 ## Output Format
 
