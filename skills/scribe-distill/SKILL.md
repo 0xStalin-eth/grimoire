@@ -35,6 +35,7 @@ in_progress before starting it and completed when done.
 
 ```
 - [ ] 1. Load finding and context
+- [ ] 1b. Gather research context
 - [ ] 2. Check for existing coverage
 - [ ] 3. Extract generalizable pattern
 - [ ] 4. Assess automation feasibility
@@ -58,6 +59,39 @@ Read the finding file. Extract:
 Read `GRIMOIRE.md` for codebase context — architecture, crown jewels, technology stack.
 
 Check in with the user before continuing.
+
+### 1b. Gather Research Context
+
+The engagement's research often explains the finding better than the report does: why
+look-alike code is safe, which severity arguments held up, what the design intends. Use it
+to make the check for THIS finding more precise.
+
+Grep the research folders for the finding's identifiers (each `Contract::function` it names,
+plus 2-3 distinctive title keywords). Read only the files that match:
+
+```bash
+grep -rlE '<id1>|<id2>|<keyword>' grimoire/{findings,peer-review,hypotheses,delves,tomes} 2>/dev/null
+```
+
+Take from each source:
+
+| Source | Feeds |
+|--------|-------|
+| `hypotheses/invalid/` | **Benign cases**: shapes that looked like this bug and were closed, with the reason |
+| `findings/`, `peer-review/` | **Patterns** (exact code shape, real grep terms) and **severity rules** (what raised or lowered it) |
+| `tomes/` | **Intended behavior** and accepted caveats, so the check does not flag a design choice |
+| `delves/`, `hypotheses/{valid,WIP}/` | **Root-cause confirmation** only |
+
+Rules:
+- **Narrow, correct or confirm; never widen.** Research may sharpen the check's patterns,
+  benign cases and severity rules. It must not add new patterns, sub-variants or checks.
+  A sibling path the research surfaces is listed as a note in step 9, not encoded.
+- **Trust the final word.** Use a claim only if the final finding or report, a peer review,
+  or a hypothesis in `valid/` or `invalid/` supports it. Tomes and `WIP/` can be stale.
+- **Strip instance detail as usual** (step 3). Keep codebase names only as grep seeds, labeled
+  as such.
+
+If the folders do not exist, skip this step.
 
 ### 2. Check for Existing Coverage
 
@@ -151,6 +185,14 @@ bash skills/checks/scripts/validate-check.sh <path-to-check>
 ```
 
 If validation fails, fix the issues and re-validate.
+
+**Recall test.** Then confirm the check fires on the finding it came from, against the
+**audited** code (the commit the finding was reported on, not post-mitigation code). Spawn one
+subagent per check with only the check file and the codebase path, as the checks skill's
+Apply mode does. Pass: it reports the finding's own location as a true positive. Fail:
+tighten or correct the patterns and assessment until it does, then rerun. Report the
+result per check (hit / miss, plus any other matches as candidate false positives). Runs on
+post-mitigation code are check application, not distillation.
 
 For knowledge artifacts, verify: frontmatter is well-formed, description is clear and
 actionable, the document is self-contained.
